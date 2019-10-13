@@ -412,47 +412,6 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 });
 
     }
-//      public void openfileFromFirebaseStorage()
-//    {
-//            mStorage = FirebaseStorage.getInstance();
-//            StorageReference storageRef = mStorage.getReference();
-//            // Create a reference to "mountains.jpg"
-//            //StorageReference mountainsRef = storageRef.child(h+".json");
-//
-//            // Create a reference to 'images/mountains.jpg'
-//           StorageReference pipelineRef = mStorage.getReferenceFromUrl("gs://pipeline-30aa5.appspot.com/pipeline/08-04-2019-2-4056.json");
-//            StorageReference pipelineRef2 = storageRef.child("/pipeline/08-06-2019-12-5039.json");
-//            final long ONE_MEGABYTE = 1024 * 1024;
-//            Task<byte[]> task = pipelineRef2.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-//                @Override
-//                public void onSuccess(byte[] bytes) {
-//                    String responseBody=new String(bytes);
-//                    try {
-//                        JSONObject testV=new JSONObject(new String(responseBody));
-//                        mJsonArray = (JSONArray) testV.get(LOCATIONS);
-//
-//                        for(int i = 0; i < mJsonArray.length(); i++)
-//                        {
-//                            double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
-//                            double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
-//                            LatLng latLng = new LatLng(lat,lon);
-//                            mPolylineOptions = mPolylineOptions.add(latLng);
-//
-//
-//                        }
-//                        mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                    // Data for "images/island.jpg" is returns, use this as needed
-//                }
-//            }).addOnFailureListener(new OnFailureListener() {
-//                @Override
-//                public void onFailure(@NonNull Exception exception) {
-//                    // Handle any errors
-//                }
-//            });
-//    }
 
 
     @Override
