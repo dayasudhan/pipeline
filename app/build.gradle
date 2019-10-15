@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
+    useLibrary 'org.apache.http.legacy'
     compileSdkVersion 29
     defaultConfig {
         applicationId "com.kuruvatech.pipeline"
@@ -39,6 +40,7 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:0.4+'
     //implementation 'com.karumi:dexter:4.2.0'
     implementation 'com.android.support:multidex:1.0.3'
+
 }
 
 apply plugin: 'com.google.gms.google-services'

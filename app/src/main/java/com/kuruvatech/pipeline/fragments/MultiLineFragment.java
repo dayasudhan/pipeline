@@ -1,16 +1,21 @@
 package com.kuruvatech.pipeline.fragments;
 import android.Manifest;
+import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -33,11 +38,13 @@ import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -47,14 +54,32 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.gson.Gson;
+import com.kuruvatech.pipeline.MainActivity;
 import com.kuruvatech.pipeline.R;
+import com.kuruvatech.pipeline.model.Coordinate;
+import com.kuruvatech.pipeline.model.LineInfo;
+import com.kuruvatech.pipeline.model.location;
+import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.io.IOException;
+import android.net.ParseException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -143,17 +168,8 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     private ToggleButton togglePlayButton, togglePauseButton;
     FirebaseFirestore mDb;
     FirebaseStorage mStorage ;
-//    private static final int[] PATTERN_TYPE_NAME_RESOURCE_IDS;
-//
-//    static {
-//        PATTERN_TYPE_NAME_RESOURCE_IDS = new int[]{
-//                R.string.pattern_solid, // Default
-//                R.string.pattern_dashed,
-//                R.string.pattern_dotted,
-//                R.string.pattern_mixed,
-//        };
-//    }
-
+    Gson gson ;
+    ArrayList<LineInfo> lineInfoList ;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -162,27 +178,32 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
        // MobileAds.initialize(getActivity(), Constants.ADMOBAPPID);
         rootview = inflater.inflate(R.layout.fragment_multiline, container, false);
         fragmentManager=getChildFragmentManager();
+        gson = new Gson();
+
+
         mDb = FirebaseFirestore.getInstance();
-// Get a non-default Storage bucket
+ //Get a non-default Storage bucket
 
         mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
         togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
         togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
-        togglePlayButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-               // openfileFromFirebaseStorage();
-
-
-            }
-        });
-       // openlinesfromfirestorage();
-//        togglePauseButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//        togglePlayButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 //            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                //startLocationUpdates(isChecked);
-//                togglePauseButton.setVisibility(.INVISIBLE);
+//               // openfileFromFirebaseStorage();
+//
 //
 //            }
 //        });
+   //     getPipelineWithinCoordinates();
+//        openlinesfromfirestorage();
+//        togglePauseButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                startLocationUpdates(isChecked);
+//                //togglePauseButton.setVisibility(.INVISIBLE);
+//
+//            }
+//        });
+
 
         mFragment = (SupportMapFragment)fragmentManager.findFragmentById(R.id.map);
         mFragment.getMapAsync(this);
@@ -277,10 +298,16 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 polyline.setColor(polyline.getColor() ^ 0x00ffffff);
             }
         });
-        openlinesfromfirestorage();
+        //openlinesfromfirestorage();
+//        map.setLatLngBoundsForCameraTarget();
+
         enableMyLocation();
         map.setOnMyLocationButtonClickListener(this);
         map.setOnMapClickListener(this);
+
+        VisibleRegion visibleRegion = map.getProjection().getVisibleRegion();
+        LatLngBounds latLngBounds = visibleRegion.latLngBounds;
+        getPipelineWithinCoordinates(latLngBounds);
 
     }
 
@@ -413,6 +440,24 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 
     }
 
+//    public void openlinesfromserver()
+//    {
+//        LatLng southwest = new LatLng(14.1603438,75.6205914);
+//        LatLng northeast = new LatLng(14.0510405,75.7768592);
+//        LatLngBounds bounds = new LatLngBounds(southwest,northeast);
+//        String coordinates = new String();
+//        double g =bounds.northeast.longitude;
+//bounds
+//        {
+//                    "coordinates":  [[
+//            [14.1603438,75.6205914],
+//            [14.0697727,75.6018832],
+//            [14.0510405,75.7768592],
+//            [14.2538865,75.7388695],
+//            [14.1603438,75.6205914]
+//          ]]
+//        }
+//    }
 
     @Override
     public void onMapClick(LatLng latLng) {
@@ -449,4 +494,145 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+    public void getPipelineWithinCoordinates(LatLngBounds latLngBounds)
+    {
+//        LatLng southwest = new LatLng(14.1603438,75.6205914);
+//        LatLng northeast = new LatLng(14.0510405,75.7768592);
+//        //ArrayList<Double, Double>[] al = new ArrayList[n];
+//        LatLngBounds bounds = null;
+//        try{
+//             bounds = new LatLngBounds(northeast,southwest);
+//        }
+//        catch(Exception e)
+//        {
+//            e.printStackTrace();
+//        }
+
+        String southwestlatitude =  Double.toString(latLngBounds.southwest.latitude);
+        String southwestlongitude = Double.toString(latLngBounds.southwest.longitude);
+        String northeastlatitude =  Double.toString(latLngBounds.northeast.latitude);
+        String northeastlongitude=  Double.toString(latLngBounds.northeast.longitude);
+        Coordinate box = new Coordinate();
+        box.setNortheastlatitude(northeastlatitude);
+        box.setNortheastlongitude(northeastlongitude);
+        box.setSouthwestlatitude(southwestlatitude);
+        box.setSouthwestlongitude(southwestlongitude);
+
+        String strbox = gson.toJson(box);
+        new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL,strbox);
+    }
+    public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
+        Dialog dialog;
+        public  PostJSONAsyncTask()
+        {
+        }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog = new Dialog(getActivity(),android.R.style.Theme_Translucent);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.custom_progress_dialog);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.show();
+            dialog.setCancelable(true);
+        }
+
+        @Override
+        protected Boolean doInBackground(String... urls) {
+            try {
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+                HttpPost request = new HttpPost(urls[0]);
+                HttpClient httpclient = new DefaultHttpClient();
+                UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
+                StringEntity se = new StringEntity(urls[1]);
+                request.setEntity(se);
+                request.setHeader("Accept", "application/json");
+                request.setHeader("Content-type", "application/json");
+                request.setHeader(Constants.SECUREKEY_KEY, Constants.SECUREKEY_VALUE);
+                request.setHeader(Constants.VERSION_KEY, Constants.VERSION_VALUE);
+                request.setHeader(Constants.CLIENT_KEY, Constants.CLIENT_VALUE);
+                HttpResponse response = httpclient.execute(request);
+
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+
+                    String responseOrder = EntityUtils.toString(entity);
+                    try {
+                        lineInfoList = new ArrayList<LineInfo>();
+                        JSONArray jsonArray = new JSONArray(responseOrder);
+                        for(int i = 0; i < jsonArray.length(); i++)
+                        {
+                            LineInfo lineInfo = null;
+                            try {
+                                lineInfo = gson.fromJson(jsonArray.getString(i), LineInfo.class);
+                                JSONObject obj = jsonArray.getJSONObject(i);
+                                {
+                                    if (obj.has("location")) {
+                                        JSONObject obj2 = obj.getJSONObject("location");
+                                        if (obj2.has("coordinates")){
+                                            JSONArray obj3 = obj2.getJSONArray("coordinates");
+                                            for (int j = 0; j < obj3.length(); j++) {
+                                                JSONArray obj4 = obj3.getJSONArray(j);
+                                                Double objlat = obj4.getDouble(0);
+                                                Double objlong = obj4.getDouble(1);
+                                                lineInfo.getLoc().getCoordinates().add(new LatLng(objlat, objlong));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                            String str = lineInfo.getName();
+                            lineInfoList.add(lineInfo);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    return true;
+                }
+            } catch (ParseException e1) {
+                e1.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        protected void onPostExecute(Boolean result) {
+
+            dialog.cancel();
+            if(result == true){
+
+                    try {
+                        for (int i = 0; i < lineInfoList.size(); i++) {
+                            location loc = lineInfoList.get(i).getLoc();
+                            int points  = loc.getCoordinates().size();
+                            mPolylineOptions = new PolylineOptions()
+                                    .color(Color.MAGENTA)
+                                    .width(mLinewidth)
+                                    .clickable(mClickabilityCheckbox.isChecked());
+                            for (int j = 0; j < points; j++) {
+                                double lat = loc.getCoordinates().get(j).latitude;
+                                double lon = loc.getCoordinates().get(j).longitude;
+                                LatLng latLng = new LatLng(lat, lon);
+                                mPolylineOptions = mPolylineOptions.add(latLng);
+                            }
+                            mMutablePolyline = mMap.addPolyline(mPolylineOptions);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+            }
+            else if (result == false)
+                Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
 }

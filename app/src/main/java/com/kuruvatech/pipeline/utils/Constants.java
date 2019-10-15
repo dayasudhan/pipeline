@@ -5,16 +5,16 @@ public class Constants {
 
     public static final String LOCALHOST = "http://192.168.1.104:3000";
 
-    public static final String RELEASE_URL = "http://chunavane.herokuapp.com";
-    public static final String DEBUG_URL = "http://chunavane.herokuapp.com";
+    public static final String RELEASE_URL = "http://pipelinemap.herokuapp.com";
+    public static final String DEBUG_URL = "http://pipelinemap.herokuapp.com";
 
     public static final String MAIN_URL = DEBUG_URL;
     public static final String USERNAME = "PipelineMap";
     public static final String PARTY = "PipelineMap";
-    public static final String GET_FEEDS_URL = MAIN_URL + "/v2/feed/info/";
-    public static final String GET_IMAGES_URL = MAIN_URL + "/v1/feed/images/";
-    public static final String GET_VIDEOS_URL = MAIN_URL + "/v1/feed/videos/";
-    public static final String GET_MANIFESTO_URL = MAIN_URL + "/v1/feed/manifesto/" + PARTY;
+    public static final String GET_PIPELINE_URL = MAIN_URL + "/v1/plinemap/all";
+    public static final String POST_PIPELINE_URL = MAIN_URL + "v1/pline/b";
+    public static final String GET_PIPELINE_NEARBY_URL = MAIN_URL + "/v1/plinemap/nearby";
+    public static final String GET_PIPELINE_WITHIN_URL = MAIN_URL + "/v1/plinemap/geowithin";
     public static final String POST_LETTER_URL = MAIN_URL + "/v1/candidate/suggestion/" +USERNAME;
 
 
