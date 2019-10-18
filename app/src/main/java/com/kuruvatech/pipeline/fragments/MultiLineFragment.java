@@ -34,6 +34,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
@@ -104,7 +105,7 @@ import static android.content.ContentValues.TAG;
 
 public class MultiLineFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMapClickListener,
+        GoogleMap.OnMapClickListener, GoogleMap.OnCameraIdleListener,
         AdapterView.OnItemSelectedListener{
 
 
@@ -270,7 +271,7 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         };
         // Override the default conte
         // nt description on the view, for accessibility mode.
-        map.setContentDescription(getString(R.string.polyline_demo_description));
+        mMap.setContentDescription(getString(R.string.polyline_demo_description));
 
 
 //        int color = Color.HSVToColor(
@@ -288,10 +289,10 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 
         // Move the map so that it is centered on the mutable polyline.
         // map.moveCamera(CameraUpdateFactory.newLatLngZoom(MELBOURNE, 5));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 18));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 10));
         // map.setMyLocationEnabled(true);
         // Add a listener for polyline clicks that changes the clicked polyline's color.
-        map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
                 // Flip the values of the red, green and blue components of the polyline's color.
@@ -302,10 +303,17 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 //        map.setLatLngBoundsForCameraTarget();
 
         enableMyLocation();
-        map.setOnMyLocationButtonClickListener(this);
-        map.setOnMapClickListener(this);
-
-        VisibleRegion visibleRegion = map.getProjection().getVisibleRegion();
+        mMap.setOnMyLocationButtonClickListener(this);
+        mMap.setOnMapClickListener(this);
+        mMap.setOnCameraIdleListener(this);
+//        map.onCameraChange(new GoogleMap.OnCameraChangeListener() {
+//
+//            @Override
+//            public void onCameraChange(CameraPosition arg0) {
+//                moveMapCameraToBoundsAndInitClusterkraf();
+//            }
+//        });
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
         LatLngBounds latLngBounds = visibleRegion.latLngBounds;
         getPipelineWithinCoordinates(latLngBounds);
 
@@ -396,68 +404,6 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 .build();
         mGoogleApiClient.connect();//kasturbainsurance@gmail.com
     }
-    public void openlinesfromfirestorage()
-    {
-        mDb.collection("pipeline")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                //   Log.d(TAG, document.getId() + " => " + document.getData());
-                                if (document.getData().get("line") != null) {
-                                    String responseBody = document.getData().get("line").toString();
-//                                Toast.makeText(getActivity(), "DocumentSnapshot data: " + document.getId(), Toast.LENGTH_SHORT)
-//                                .show();
-                                    //  String responseBody=new String(bytes);
-                                    try {
-                                        JSONArray testV = new JSONArray(new String(responseBody));
-                                        mJsonArray = testV;
-                                        mPolylineOptions = new PolylineOptions()
-                                                .color(Color.MAGENTA)
-                                                .width(mLinewidth)
-                                                .clickable(mClickabilityCheckbox.isChecked());
-                                        for (int i = 0; i < mJsonArray.length(); i++) {
-                                            double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
-                                            double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
-                                            LatLng latLng = new LatLng(lat, lon);
-                                            mPolylineOptions = mPolylineOptions.add(latLng);
-
-
-                                        }
-                                        mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        } else {
-                            Log.d(TAG, "Error getting documents: ", task.getException());
-                        }
-                    }
-                });
-
-    }
-
-//    public void openlinesfromserver()
-//    {
-//        LatLng southwest = new LatLng(14.1603438,75.6205914);
-//        LatLng northeast = new LatLng(14.0510405,75.7768592);
-//        LatLngBounds bounds = new LatLngBounds(southwest,northeast);
-//        String coordinates = new String();
-//        double g =bounds.northeast.longitude;
-//bounds
-//        {
-//                    "coordinates":  [[
-//            [14.1603438,75.6205914],
-//            [14.0697727,75.6018832],
-//            [14.0510405,75.7768592],
-//            [14.2538865,75.7388695],
-//            [14.1603438,75.6205914]
-//          ]]
-//        }
-//    }
 
     @Override
     public void onMapClick(LatLng latLng) {
@@ -494,20 +440,15 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
+    @Override
+    public void onCameraIdle() {
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+        LatLngBounds latLngBounds = visibleRegion.latLngBounds;
+        getPipelineWithinCoordinates(latLngBounds);
+    }
+
     public void getPipelineWithinCoordinates(LatLngBounds latLngBounds)
     {
-//        LatLng southwest = new LatLng(14.1603438,75.6205914);
-//        LatLng northeast = new LatLng(14.0510405,75.7768592);
-//        //ArrayList<Double, Double>[] al = new ArrayList[n];
-//        LatLngBounds bounds = null;
-//        try{
-//             bounds = new LatLngBounds(northeast,southwest);
-//        }
-//        catch(Exception e)
-//        {
-//            e.printStackTrace();
-//        }
-
         String southwestlatitude =  Double.toString(latLngBounds.southwest.latitude);
         String southwestlongitude = Double.toString(latLngBounds.southwest.longitude);
         String northeastlatitude =  Double.toString(latLngBounds.northeast.latitude);
@@ -521,6 +462,10 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         String strbox = gson.toJson(box);
         new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL,strbox);
     }
+
+
+
+
     public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
         Dialog dialog;
         public  PostJSONAsyncTask()
@@ -633,6 +578,67 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
         }
     }
+//    public void openlinesfromfirestorage()
+//    {
+//        mDb.collection("pipeline")
+//                .get()
+//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+//                        if (task.isSuccessful()) {
+//                            for (QueryDocumentSnapshot document : task.getResult()) {
+//                                //   Log.d(TAG, document.getId() + " => " + document.getData());
+//                                if (document.getData().get("line") != null) {
+//                                    String responseBody = document.getData().get("line").toString();
+////                                Toast.makeText(getActivity(), "DocumentSnapshot data: " + document.getId(), Toast.LENGTH_SHORT)
+////                                .show();
+//                                    //  String responseBody=new String(bytes);
+//                                    try {
+//                                        JSONArray testV = new JSONArray(new String(responseBody));
+//                                        mJsonArray = testV;
+//                                        mPolylineOptions = new PolylineOptions()
+//                                                .color(Color.MAGENTA)
+//                                                .width(mLinewidth)
+//                                                .clickable(mClickabilityCheckbox.isChecked());
+//                                        for (int i = 0; i < mJsonArray.length(); i++) {
+//                                            double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
+//                                            double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
+//                                            LatLng latLng = new LatLng(lat, lon);
+//                                            mPolylineOptions = mPolylineOptions.add(latLng);
+//
+//
+//                                        }
+//                                        mMutablePolyline = mMap.addPolyline(mPolylineOptions);
+//                                    } catch (JSONException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            }
+//                        } else {
+//                            Log.d(TAG, "Error getting documents: ", task.getException());
+//                        }
+//                    }
+//                });
+//
+//    }
 
+//    public void openlinesfromserver()
+//    {
+//        LatLng southwest = new LatLng(14.1603438,75.6205914);
+//        LatLng northeast = new LatLng(14.0510405,75.7768592);
+//        LatLngBounds bounds = new LatLngBounds(southwest,northeast);
+//        String coordinates = new String();
+//        double g =bounds.northeast.longitude;
+//bounds
+//        {
+//                    "coordinates":  [[
+//            [14.1603438,75.6205914],
+//            [14.0697727,75.6018832],
+//            [14.0510405,75.7768592],
+//            [14.2538865,75.7388695],
+//            [14.1603438,75.6205914]
+//          ]]
+//        }
+//    }
 
 }
