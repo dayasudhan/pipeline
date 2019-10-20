@@ -1,14 +1,18 @@
 package com.kuruvatech.pipeline.fragments;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 
 //import android.location.LocationManager;
 import android.location.LocationManager;
+import android.net.ParseException;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
@@ -28,6 +32,7 @@ import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 
 import android.widget.CheckBox;
@@ -54,6 +59,7 @@ import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
@@ -67,10 +73,15 @@ import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.google.gson.Gson;
 import com.kuruvatech.pipeline.R;
 
+import com.kuruvatech.pipeline.model.Coordinate;
+import com.kuruvatech.pipeline.model.LineInfo;
 import com.kuruvatech.pipeline.model.PipelineObject;
 //import com.kuruvatech.pipeline.utils.Constants;
+import com.kuruvatech.pipeline.model.location;
+import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
 
@@ -78,6 +89,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +100,16 @@ import android.os.Build;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -163,6 +185,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     private ToggleButton togglePlayButton, togglePauseButton;
     FirebaseFirestore mDb;
     FirebaseStorage mStorage ;
+    Gson gson ;
 //    private static final int[] PATTERN_TYPE_NAME_RESOURCE_IDS;
 //
 //    static {
@@ -183,6 +206,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         rootview = inflater.inflate(R.layout.polyline_demo, container, false);
         fragmentManager=getChildFragmentManager();
         mDb = FirebaseFirestore.getInstance();
+        gson = new Gson();
+        postPipelineWithCoordinates();
 // Get a non-default Storage bucket
 
         mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
@@ -844,6 +869,98 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 }
                 return;
             }
+        }
+    }
+    public void postPipelineWithCoordinates()
+    {
+//        String southwestlatitude =  Double.toString(latLngBounds.southwest.latitude);
+//        String southwestlongitude = Double.toString(latLngBounds.southwest.longitude);
+//        String northeastlatitude =  Double.toString(latLngBounds.northeast.latitude);
+//        String northeastlongitude=  Double.toString(latLngBounds.northeast.longitude);
+//        Coordinate box = new Coordinate();
+//        box.setNortheastlatitude(northeastlatitude);
+//        box.setNortheastlongitude(northeastlongitude);
+//        box.setSouthwestlatitude(southwestlatitude);
+//        box.setSouthwestlongitude(southwestlongitude);
+//        String strbox = gson.toJson(box);
+        Double doubleArray[][] = {{15.138796,75.6604763},{18.1194829,78.6511871}};
+        ArrayList<LatLng> list = new ArrayList<LatLng>();
+        LatLng l1 = new LatLng(15.138796,75.6604763);
+        LatLng l2 = new LatLng(15.1194829,75.6511871);
+        LatLng l3 = new LatLng(14.138796,75.5604763);
+        list.add(l1);
+        list.add(l2);
+        list.add(l3);
+        location loc= new location();
+        loc.setCoordinates(list);
+        loc.setType("Line");
+        Gson gson = new Gson();
+        String strOrder = gson.toJson(loc);
+        new PostJSONAsyncTask().execute(Constants.POST_PIPELINE_URL,strOrder);
+    }
+
+
+
+
+    public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
+        Dialog dialog;
+        public  PostJSONAsyncTask()
+        {
+        }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog = new Dialog(getActivity(),android.R.style.Theme_Translucent);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.custom_progress_dialog);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.show();
+            dialog.setCancelable(true);
+        }
+
+        @Override
+        protected Boolean doInBackground(String... urls) {
+            try {
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+                HttpPost request = new HttpPost(urls[0]);
+                HttpClient httpclient = new DefaultHttpClient();
+                UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
+                StringEntity se = new StringEntity(urls[1]);
+
+                ArrayList<NameValuePair> postVars = new ArrayList<NameValuePair>();
+                request.setEntity(se);
+                request.setHeader("Accept", "application/json");
+                request.setHeader("Content-type", "application/json");
+                request.setHeader(Constants.SECUREKEY_KEY, Constants.SECUREKEY_VALUE);
+                request.setHeader(Constants.VERSION_KEY, Constants.VERSION_VALUE);
+                request.setHeader(Constants.CLIENT_KEY, Constants.CLIENT_VALUE);
+                HttpResponse response = httpclient.execute(request);
+
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+
+                    String responseOrder = EntityUtils.toString(entity);
+
+                    return true;
+                }
+            } catch (ParseException e1) {
+                e1.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        protected void onPostExecute(Boolean result) {
+
+            dialog.cancel();
+            if(result == true){
+
+
+
+            }
+            else if (result == false)
+                Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
         }
     }
 
