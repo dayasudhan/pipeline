@@ -8,6 +8,9 @@ public class location {
     public location() {
         type = "";
         coordinates = new ArrayList<LatLng>();
+        name = "";
+        phone = "";
+        paid = false;
     }
 
     public String getType() {
@@ -25,6 +28,34 @@ public class location {
     public void setCoordinates(ArrayList<LatLng> coordinates) {
         this.coordinates = coordinates;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public boolean isPaid() {
+        return paid;
+    }
+
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+    }
     String type;
     ArrayList<LatLng> coordinates ;
+    String name;
+    String phone;
+    boolean paid;
+
 }

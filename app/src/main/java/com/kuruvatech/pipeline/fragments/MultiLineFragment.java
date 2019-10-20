@@ -195,17 +195,6 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 //
 //            }
 //        });
-   //     getPipelineWithinCoordinates();
-//        openlinesfromfirestorage();
-//        togglePauseButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                startLocationUpdates(isChecked);
-//                //togglePauseButton.setVisibility(.INVISIBLE);
-//
-//            }
-//        });
-
-
         mFragment = (SupportMapFragment)fragmentManager.findFragmentById(R.id.map);
         mFragment.getMapAsync(this);
         return rootview;

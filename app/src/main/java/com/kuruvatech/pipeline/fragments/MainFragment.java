@@ -9,12 +9,11 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 
-//import android.location.LocationManager;
 import android.location.LocationManager;
 import android.net.ParseException;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
+
 import android.os.Looper;
 import android.provider.Settings;
 import androidx.annotation.NonNull;
@@ -28,15 +27,18 @@ import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AlertDialog;
 
 import androidx.appcompat.app.AppCompatActivity;
-import android.text.format.DateFormat;
+
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 
 
@@ -59,47 +61,24 @@ import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.google.gson.Gson;
 import com.kuruvatech.pipeline.R;
-
-import com.kuruvatech.pipeline.model.Coordinate;
-import com.kuruvatech.pipeline.model.LineInfo;
-import com.kuruvatech.pipeline.model.PipelineObject;
-//import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.model.location;
 import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
-
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-
 import android.os.Build;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -108,7 +87,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -123,7 +101,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         AdapterView.OnItemSelectedListener{
 
 
-
     View rootview;
 
     /**
@@ -136,15 +113,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     // City locations for mutable polyline.
 
     private static final LatLng KURUVA = new LatLng(14.142235317478407, 75.66676855087282);
-    private static final LatLng KURUVA2 = new LatLng(14.143235517478407, 75.66776655087282);
-    private static final LatLng KURUVA3 = new LatLng(14.14423717478407, 75.66876455087282);
-    private static final LatLng KURUVA4 = new LatLng(14.145239317478407, 75.66976355087282);
 
-    // Airport locations for geodesic polyline.
-    private static final LatLng AKL = new LatLng(-37.006254, 174.783018);
-    private static final LatLng JFK = new LatLng(40.641051, -73.777485);
-    private static final LatLng LAX = new LatLng(33.936524, -118.377686);
-    private static final LatLng LHR = new LatLng(51.471547, -0.460052);
+
     private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
     private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
@@ -154,9 +124,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     private static final Dot DOT = new Dot();
     private static final Dash DASH = new Dash(PATTERN_DASH_LENGTH_PX);
     private static final Gap GAP = new Gap(PATTERN_GAP_LENGTH_PX);
-    private static final List<PatternItem> PATTERN_DOTTED = Arrays.asList(DOT, GAP);
-    private static final List<PatternItem> PATTERN_DASHED = Arrays.asList(DASH, GAP);
-    private static final List<PatternItem> PATTERN_MIXED = Arrays.asList(DOT, GAP, DOT, DASH, GAP);
+   private static final List<PatternItem> PATTERN_MIXED = Arrays.asList(DOT, GAP, DOT, DASH, GAP);
     float mLinewidth =(float)5.0;
     private Polyline mMutablePolyline;
     private PolylineOptions mPolylineOptions ;
@@ -179,23 +147,12 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationcallback;
     private int locationRequestCode = 1000;
-    private double wayLatitude = 0.0, wayLongitude = 0.0;
     JSONArray mJsonArray = new JSONArray();
     boolean mIsStartPipeLine =false;
     private ToggleButton togglePlayButton, togglePauseButton;
-    FirebaseFirestore mDb;
-    FirebaseStorage mStorage ;
+
     Gson gson ;
-//    private static final int[] PATTERN_TYPE_NAME_RESOURCE_IDS;
-//
-//    static {
-//        PATTERN_TYPE_NAME_RESOURCE_IDS = new int[]{
-//                R.string.pattern_solid, // Default
-//                R.string.pattern_dashed,
-//                R.string.pattern_dotted,
-//                R.string.pattern_mixed,
-//        };
-//    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -205,11 +162,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
         rootview = inflater.inflate(R.layout.polyline_demo, container, false);
         fragmentManager=getChildFragmentManager();
-        mDb = FirebaseFirestore.getInstance();
         gson = new Gson();
-        postPipelineWithCoordinates();
-// Get a non-default Storage bucket
-
         mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
         togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
         togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
@@ -234,30 +187,15 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
             }
         });
 
-        //SupportMapFragment mapFragment =
-//                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-//        mapFragment.getMapAsync(this);
-        //   googleMap = ((SupportMapFragment)fragmentManager.findFragmentById(R.id.map)).getMap();
         mFragment = (SupportMapFragment)fragmentManager.findFragmentById(R.id.map);
         mFragment.getMapAsync(this);
         return rootview;
     }
 
-
-    private String[] getResourceStrings(int[] resourceIds) {
-        String[] strings = new String[resourceIds.length];
-        for (int i = 0; i < resourceIds.length; i++) {
-            strings[i] = getString(resourceIds[i]);
-        }
-        return strings; //08202923069
-    }
     @Override
     public void onResume() {
         super.onResume();
     }
-
-
-
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -274,9 +212,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
     }
 
-
-
-
     @Override
     public boolean onMyLocationButtonClick() {
         //   Toast.makeText(getContext(), "MyLocation button clicked", Toast.LENGTH_SHORT).show();
@@ -287,7 +222,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     //and then register for location
     @Override
     public void onMapReady(GoogleMap map) {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkLocationPermission();
         }
@@ -310,31 +244,16 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 onLocationChanged(locationResult.getLastLocation());
             }
         };
-        // Override the default conte
-        // nt description on the view, for accessibility mode.
         map.setContentDescription(getString(R.string.polyline_demo_description));
-
-
-//        int color = Color.HSVToColor(
-//                mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});
         mPolylineOptions = new PolylineOptions()
                 .color(Color.RED)
                 .width(mLinewidth)
                 .clickable(mClickabilityCheckbox.isChecked());
-        // .add(KURUVA, KURUVA2, KURUVA3, KURUVA4);
-
-
         mMutablePolyline = map.addPolyline(mPolylineOptions);
-
-
-
         mMutablePolyline.setWidth(mLinewidth);
         mMutablePolyline.setPattern(PATTERN_MIXED);
-        // Move the map so that it is centered on the mutable polyline.
-        // map.moveCamera(CameraUpdateFactory.newLatLngZoom(MELBOURNE, 5));
+
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 18));
-        // map.setMyLocationEnabled(true);
-        // Add a listener for polyline clicks that changes the clicked polyline's color.
         map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
@@ -345,21 +264,15 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         enableMyLocation();
         map.setOnMyLocationButtonClickListener(this);
         map.setOnMapClickListener(this);
-
     }
 
     private void enableMyLocation() {
-        //  Toast.makeText(getCon"enableMyLocation ", Toast.LENGTH_SHORT).show();
-
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+       if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
             PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LOCATION_PERMISSION_REQUEST_CODE,
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
             buildGoogleApiClient();
-
             //  Toast.makeText(getContext(), "enableMyLocation startLocationUpdates ", Toast.LENGTH_SHORT).show();
-
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
             buildGoogleApiClient();
@@ -367,16 +280,13 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         }
     }
 
-
-
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-        // Don't do anything here.
+       // Don't do anything here.
     }
 
     @Override
@@ -394,15 +304,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         if (mMutablePolyline == null) {
             return;
         }
-
     }
 
-
-    /**
-     * Toggles the clickability of the polyline based on the state of the View that triggered this
-     * call.
-     * This callback is defined on the CheckBox in the layout for this Activity.
-     */
     public void toggleClickability(View view) {
         if (mMutablePolyline != null) {
             mMutablePolyline.setClickable(((CheckBox) view).isChecked());
@@ -451,244 +354,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 .build();
         mGoogleApiClient.connect();//kasturbainsurance@gmail.com
     }
-
-    //    public static LatLng locationToLatLng(Location loc) {
-//        if(loc != null)
-//            return new LatLng(loc.getLatitude(), loc.getLongitude());
-//        return null;
-//    }
-    public void savetodb()
-    {
-// Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        GeoPoint gp = new GeoPoint(1,1);
-
-        PipelineObject pobj= new PipelineObject();
-//        pobj.setRegions(Arrays.asList("west_coast", "sorcal"));
-        pobj.setName("Devraj");
-        pobj.setPhone("9566229075");
-        pobj.setVillage("kuruva");
-        try {
-//            JSONObject obj21 = new JSONObject();
-//            JSONObject obj31 = new JSONObject();
-//            obj21.put("Latitude", Double.toString(15.9808098));
-//            obj21.put("Longitude", Double.toString(75.980980980));
-//            obj31.put("Latitude", Double.toString(14.9808098));
-//            obj31.put("Longitude", Double.toString(17.980980980));
-//            mJsonArray.put(obj21);
-//            mJsonArray.put(obj31);
-            for(int i = 0; i < mJsonArray.length();i++)
-            {
-                HashMap<String,String> l1=  new HashMap<>();
-                l1.put("Lat", mJsonArray.getJSONObject(i).getString("Latitude"));
-                l1.put("Logt", mJsonArray.getJSONObject(i).getString("Longitude"));
-                pobj.getLine().add(l1);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mDb.collection("pipeline")
-                .add(pobj)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Toast.makeText(getActivity(), documentReference.getId(), Toast.LENGTH_LONG).show();
-                        //    Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getActivity(), "Error adding document->" + e.getMessage(), Toast.LENGTH_LONG).show();
-                        //    Log.w(TAG, "Error adding document", e);
-                    }
-                });
-
-    }
-    public void savetodb2()
-    {
-// Create a new user with a first and last name
-        Map<String, Object> user = new HashMap<>();
-        GeoPoint gp = new GeoPoint(1,1);
-
-        PipelineObject pobj= new PipelineObject();
-//        pobj.setRegions(Arrays.asList("west_coast", "sorcal"));
-        pobj.setName("Devraj");
-        pobj.setPhone("9566229075");
-        pobj.setVillage("kuruva");
-        try {
-            JSONObject obj21 = new JSONObject();
-            JSONObject obj31 = new JSONObject();
-            obj21.put("Latitude", Double.toString(15.9808098));
-            obj21.put("Longitude", Double.toString(75.980980980));
-            obj31.put("Latitude", Double.toString(14.9808098));
-            obj31.put("Longitude", Double.toString(17.980980980));
-            mJsonArray.put(obj21);
-            mJsonArray.put(obj31);
-            for(int i = 0; i < mJsonArray.length();i++)
-            {
-                HashMap<String,String> l1=  new HashMap<>();
-                l1.put("Lat", mJsonArray.getJSONObject(i).getString("Latitude"));
-                l1.put("Logt", mJsonArray.getJSONObject(i).getString("Longitude"));
-                pobj.getLine().add(l1);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        mDb.collection("pipeline")
-                .add(pobj)
-                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
-                    @Override
-                    public void onSuccess(DocumentReference documentReference) {
-                        Toast.makeText(getActivity(), documentReference.getId(), Toast.LENGTH_LONG).show();
-                        //    Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getActivity(), "Error adding document->" + e.getMessage(), Toast.LENGTH_LONG).show();
-                        //    Log.w(TAG, "Error adding document", e);
-                    }
-                });
-
-    }
-    public void savetofirebasestorage()
-    {
-        //JSONObject obj = new JSONObject();
-        String  h = DateFormat.format("MM-dd-yyyyy-h-mmss", System.currentTimeMillis()).toString();
-        JSONObject obj = new JSONObject();
-
-        try {
-            obj.put("Locations",mJsonArray);
-
-            mStorage = FirebaseStorage.getInstance();
-            StorageReference storageRef = mStorage.getReference();
-            // Create a reference to "mountains.jpg"
-            //StorageReference mountainsRef = storageRef.child(h+".json");
-
-            // Create a reference to 'images/mountains.jpg'
-            StorageReference pipelineRef = storageRef.child("pipeline/" + h+".json");
-            byte[] data = obj.toString().getBytes("utf-8");
-            UploadTask uploadTask = pipelineRef.putBytes(data);
-
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Toast.makeText(getContext(), new String("File generated with name failure" ), Toast.LENGTH_SHORT).show();
-                    // Handle unsuccessful uploads
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(getContext(),  new String("File generated with name success"), Toast.LENGTH_SHORT).show();
-                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                    // ...
-                }
-            });
-        } catch (JSONException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void savetofile()
-    {
-        try {
-            String  h = DateFormat.format("MM-dd-yyyyy-h-mmss", System.currentTimeMillis()).toString();
-            // this will create a new name everytime and unique
-            File rootr = new File(Environment.getExternalStorageDirectory(), "Notes");
-            File root2= new File("/sdcard/", "Notes");
-            File root= new File(getContext().getCacheDir(), "Notes");
-
-            Toast.makeText(getContext(), "m1", Toast.LENGTH_SHORT).show();
-            // if external memory exists and folder with name Notes
-            if (!root.exists()) {
-                Toast.makeText(getContext(), "m2", Toast.LENGTH_SHORT).show();
-                root.mkdirs(); // this will create folder.
-            }
-            Toast.makeText(getContext(), root.getAbsolutePath(), Toast.LENGTH_SHORT).show();
-            JSONObject obj = new JSONObject();
-            JSONObject obj2 = new JSONObject();
-            JSONObject obj3 = new JSONObject();
-            obj2.put("Latitude", Double.toString(14.9808098));
-            obj2.put("Longitude", Double.toString(74.980980980));
-            obj3.put("Latitude", Double.toString(14.9808098));
-            obj3.put("Longitude", Double.toString(74.980980980));
-            mJsonArray.put(obj2);
-            mJsonArray.put(obj3);
-            obj.put("Object",mJsonArray);
-            mStorage = FirebaseStorage.getInstance();
-            // StorageReference storageRef = mStorage.getReference();
-
-            File filepath = new File(root, h + ".json");  // file path to save
-            FileWriter writer = new FileWriter(filepath);
-            Toast.makeText(getContext(), "m4", Toast.LENGTH_SHORT).show();
-            writer.write(obj.toString());
-            writer.flush();
-            writer.close();
-            Toast.makeText(getContext(), "m5", Toast.LENGTH_SHORT).show();
-            //    String m = "File generated with name " + h + ".json";
-            Toast.makeText(getContext(), "File generated with name " + h + ".json", Toast.LENGTH_SHORT).show();
-            StorageReference storageRef = mStorage.getReference();
-            // Create a reference to "mountains.jpg"
-            StorageReference mountainsRef = storageRef.child(h+".json");
-
-            // Create a reference to 'images/mountains.jpg'
-            StorageReference mountainImagesRef = storageRef.child("pipeline/" + h+".json");
-            byte[] data = obj.toString().getBytes("utf-8");
-            UploadTask uploadTask = mountainImagesRef.putBytes(data);
-            //mountainImagesRef.getStorage().
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    Toast.makeText(getContext(), "File generated with name failure" +  ".json", Toast.LENGTH_SHORT).show();
-                    // Handle unsuccessful uploads
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    Toast.makeText(getContext(), "File generated with name success" +  ".json", Toast.LENGTH_SHORT).show();
-                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                    // ...
-                }
-            });
-            // Create a reference to 'images/mountains.jpg'
-            //     StorageReference mountainImagesRef = storageRef.child("images/mountains.jpg");
-//                String[] listOfFiles = getActivity().getCacheDir().list();
-//                for(int i = 0 ; i < listOfFiles.length; i++)
-//                {
-//                    Toast.makeText(getContext(), listOfFiles[i], Toast.LENGTH_SHORT).show();
-//                    if(listOfFiles[i].equals("Notes"))
-//                    {
-//                        String k = new String(getActivity().getCacheDir().getAbsolutePath().toString() + "/Notes");
-//                        String[] listOfFiles2 = getActivity().getCacheDir().list();
-//                        File directory = new File(k);
-//                        File[] files = directory.listFiles();
-//                        Toast.makeText(getContext(), "Size: "+ files.length, Toast.LENGTH_SHORT).show();
-////                        Log.d("Files", "Size: "+ files.length);
-//                        for (int jj = 0; jj < files.length; jj++)
-//                        {
-//                            Toast.makeText(getContext(), "Size: "+ files[jj].getName(), Toast.LENGTH_SHORT).show();
-////                            Log.d("Files", "FileName:" + files[i].getName());
-//                        }
-//                    }
-//                }
-
-            //   result.setText(m);
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            //  result.setText(e.getMessage().toString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-
-    }
-
 
     @Override
     public void onMapClick(LatLng latLng) {
@@ -757,7 +422,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 getFusedLocationProviderClient(getActivity()).removeLocationUpdates(mLocationcallback);
                 // savetofile();
                 // savetofirebasestorage();
-                savetodb();
+//                savetodb();
+                postPipelineWithCoordinates();
                 Toast.makeText(getContext(), "startLocationUpdates 43", Toast.LENGTH_SHORT).show();
             }
         }
@@ -795,9 +461,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
             if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Permission Required")
                         .setMessage("This permission was denied earlier by you. This permission is required to get your location. So, in order to use this feature please allow this permission by clicking ok.")
@@ -816,8 +479,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                         })
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .show();
-
-
             } else {
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(getActivity(),
@@ -829,7 +490,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
             return true;
         }
     }
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
@@ -863,8 +523,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
                 } else {
 
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
                     Toast.makeText(getActivity(), "permission denied", Toast.LENGTH_LONG).show();
                 }
                 return;
@@ -873,34 +531,45 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     }
     public void postPipelineWithCoordinates()
     {
-//        String southwestlatitude =  Double.toString(latLngBounds.southwest.latitude);
-//        String southwestlongitude = Double.toString(latLngBounds.southwest.longitude);
-//        String northeastlatitude =  Double.toString(latLngBounds.northeast.latitude);
-//        String northeastlongitude=  Double.toString(latLngBounds.northeast.longitude);
-//        Coordinate box = new Coordinate();
-//        box.setNortheastlatitude(northeastlatitude);
-//        box.setNortheastlongitude(northeastlongitude);
-//        box.setSouthwestlatitude(southwestlatitude);
-//        box.setSouthwestlongitude(southwestlongitude);
-//        String strbox = gson.toJson(box);
-        Double doubleArray[][] = {{15.138796,75.6604763},{18.1194829,78.6511871}};
         ArrayList<LatLng> list = new ArrayList<LatLng>();
-        LatLng l1 = new LatLng(15.138796,75.6604763);
-        LatLng l2 = new LatLng(15.1194829,75.6511871);
-        LatLng l3 = new LatLng(14.138796,75.5604763);
-        list.add(l1);
-        list.add(l2);
-        list.add(l3);
+//        LatLng l1 = new LatLng(15.138796,75.6604763);
+//        LatLng l2 = new LatLng(15.1194829,75.6511871);
+//        LatLng l3 = new LatLng(14.138796,75.5604763);
+//        list.add(l1);
+//        list.add(l2);
+//        list.add(l3);
+//        JSONObject obj21 = new JSONObject();
+//        JSONObject obj31 = new JSONObject();
+//        try{
+//            obj21.put("Latitude", Double.toString(15.9808098));
+//            obj21.put("Longitude", Double.toString(75.980980980));
+//            obj31.put("Latitude", Double.toString(14.9808098));
+//            obj31.put("Longitude", Double.toString(17.980980980));
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//        mJsonArray.put(obj21);
+//        mJsonArray.put(obj31);
+        for(int i = 0; i < mJsonArray.length();i++)
+        {
+         try{
+
+             LatLng l = new LatLng(mJsonArray.getJSONObject(i).getDouble("Latitude"),
+                            mJsonArray.getJSONObject(i).getDouble("Longitude"));
+                list.add(l);
+            } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+        }
         location loc= new location();
         loc.setCoordinates(list);
         loc.setType("Line");
+        loc.setName("Daya");
+        loc.setPhone("9566113456");
         Gson gson = new Gson();
         String strOrder = gson.toJson(loc);
         new PostJSONAsyncTask().execute(Constants.POST_PIPELINE_URL,strOrder);
     }
-
-
-
 
     public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
         Dialog dialog;
@@ -927,7 +596,6 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
                 StringEntity se = new StringEntity(urls[1]);
 
-                ArrayList<NameValuePair> postVars = new ArrayList<NameValuePair>();
                 request.setEntity(se);
                 request.setHeader("Accept", "application/json");
                 request.setHeader("Content-type", "application/json");
@@ -939,7 +607,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 int status = response.getStatusLine().getStatusCode();
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
-
+                    alertMessage("Success");
                     String responseOrder = EntityUtils.toString(entity);
 
                     return true;
@@ -955,13 +623,30 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
             dialog.cancel();
             if(result == true){
-
-
-
             }
             else if (result == false)
                 Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
         }
     }
+    public void alertMessage(String message) {
+        DialogInterface.OnClickListener dialogClickListeneryesno = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
 
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("PipeLine");
+        builder.setMessage(message).setNeutralButton("Ok", dialogClickListeneryesno)
+                .setIcon(R.drawable.ic_launcher_background);
+        final AlertDialog dialog = builder.create();
+        dialog.show(); //show() should be called before dialog.getButton().
+        final Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+        LinearLayout.LayoutParams positiveButtonLL = (LinearLayout.LayoutParams) neutralButton.getLayoutParams();
+        positiveButtonLL.gravity = Gravity.CENTER;
+        neutralButton.setLayoutParams(positiveButtonLL);
+    }
 }
