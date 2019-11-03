@@ -16,7 +16,7 @@
 
     <string name="hint_name">ಪೂರ್ಣ ಹೆಸರು</string>
     <string name="hint_email">ಇಮೇಲ್</string>
-    <string name="btn_sign_up">ಪತ್ರ ಕಳುಹಿಸಿ</string>
+    <string name="btn_sign_up">ಹೊಸ ಪೈಪ್‌ಲೈನ್ ನೋಂದಾಯಿಸಿ</string>
     <string name="hint_phone">ದೂರವಾಣಿ ಸಂಖ್ಯೆ</string>
     <string name="connect_to_person">ಪತ್ರ ಬರೆಯಿರಿ</string>
     <string name="name_validate">ಹೆಸರು ನಮೂದಿಸಿ</string>
@@ -42,5 +42,6 @@
     <string name="polyline_demo_description">polyline_demo_description.</string>
     <string name="myline">My PipeLine</string>
     <string name="map">PipeLine Map</string>
+    <string name="logout">ಲಾಗ್ ಔಟ್</string>
 
 </resources>

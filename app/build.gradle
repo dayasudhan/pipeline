@@ -19,7 +19,11 @@ android {
         }
     }
 }
-
+repositories {
+    maven {
+        url "https://mint.splunk.com/gradle/"
+    }
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.0.2'
@@ -40,7 +44,7 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:0.4+'
     //implementation 'com.karumi:dexter:4.2.0'
     implementation 'com.android.support:multidex:1.0.3'
-
+    implementation 'com.splunk.mint:mint:5.0.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

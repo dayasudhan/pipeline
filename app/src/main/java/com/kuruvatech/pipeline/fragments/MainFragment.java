@@ -2,6 +2,7 @@ package com.kuruvatech.pipeline.fragments;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -33,12 +34,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.SeekBar;
 
 
@@ -67,16 +71,20 @@ import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
+import com.kuruvatech.pipeline.MainActivity;
 import com.kuruvatech.pipeline.R;
 import com.kuruvatech.pipeline.model.location;
 import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
+import com.kuruvatech.pipeline.utils.SessionManager;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import android.os.Build;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 import org.apache.http.HttpEntity;
@@ -102,7 +110,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
 
     View rootview;
-
+    Button popupSubmitBtn;
+    EditText popupName,popupPhone;
     /**
      * Request code for location permission request.
      *
@@ -150,19 +159,24 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     JSONArray mJsonArray = new JSONArray();
     boolean mIsStartPipeLine =false;
     private ToggleButton togglePlayButton, togglePauseButton;
-
+    SessionManager mSession;
     Gson gson ;
-
-
+    ViewGroup mContainer;
+    AlertDialog alertDialog;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
+        mContainer = container;
         rootview = inflater.inflate(R.layout.polyline_demo, container, false);
         fragmentManager=getChildFragmentManager();
+        mSession = new SessionManager(getContext());
+        //+String email = mSession.getEmail();
         gson = new Gson();
+        ///
+       // submitDetails();
+       // showCustomViewAlertDialog();
         mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
         togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
         togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
@@ -191,7 +205,103 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         mFragment.getMapAsync(this);
         return rootview;
     }
+    private static boolean validatePhoneNumber(String phoneNo)
+    {
+        if (phoneNo.matches("\\d{10}"))
+            return true;
+        else if(phoneNo.matches("\\+\\d{12}")) return true;
+        else return false;
+    }
 
+    private void submitDetails()
+    {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setIcon(R.mipmap.ic_launcher);
+                builder.setTitle("Customer Details");
+
+                final View loginFormView = getLayoutInflater().inflate(R.layout.popup, null);
+                builder.setView(loginFormView);
+
+                Button registerButton = (Button)loginFormView.findViewById(R.id.btn_send);
+                registerButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        try {
+                            popupSubmitBtn = (Button) loginFormView.findViewById(R.id.btn_send);
+                            popupName=(EditText)loginFormView.findViewById(R.id.input_name);
+                            popupPhone=(EditText)loginFormView.findViewById(R.id.input_phone);
+                            if (popupName.getText().toString().matches("")) {
+                                //Toast.makeText(getContext(), "Please Enter Customer Name", Toast.LENGTH_SHORT).show();
+                                alertMessage("Please Enter Customer Name");
+                                return;
+                            }
+                            if (!validatePhoneNumber(popupPhone.getText().toString())) {
+                                //Toast.makeText(getContext(), "Please Enter Valid Customer Phone Number", Toast.LENGTH_SHORT).show();
+                                alertMessage("Enter Valid Phone Number");
+                                return;
+                            }
+                            else
+                            {
+                                alertDialog.cancel();
+                                postPipelineWithCoordinates();
+                            }
+                        }catch(Exception ex)
+                        {
+                            ex.printStackTrace();
+                        }
+                    }
+                });
+
+                builder.setCancelable(true);
+                alertDialog = builder.create();
+                alertDialog.show();
+
+    }
+//    public void submitDetails()
+//    {
+//
+//        LayoutInflater layoutInflater = (LayoutInflater) getActivity().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
+//        View customView = layoutInflater.inflate(R.layout.popup,null);
+//
+//        popupSubmitBtn = (Button) customView.findViewById(R.id.btn_send);
+//        popupName=(EditText)customView.findViewById(R.id.input_name);
+//        popupPhone=(EditText)customView.findViewById(R.id.input_phone);
+//        //instantiate popup window
+//        final PopupWindow popupWindow = new PopupWindow(customView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+//
+//        //display the popup window
+//        popupWindow.showAtLocation(rootview, Gravity.CENTER, 0, 0);
+//        popupName.setText("yadhuveer");
+//        showKeyboard();
+//
+//        //close the popup window on button click
+//        popupSubmitBtn.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (popupName.getText().toString().matches("")) {
+//                    //Toast.makeText(getContext(), "Please Enter Customer Name", Toast.LENGTH_SHORT).show();
+//                    alertMessage("Please Enter Customer Name");
+//                    return;
+//                }
+//                if (!validatePhoneNumber(popupPhone.getText().toString())) {
+//                    //Toast.makeText(getContext(), "Please Enter Valid Customer Phone Number", Toast.LENGTH_SHORT).show();
+//                    alertMessage("Enter Valid Phone Number");
+//                    return;
+//                }
+//                else
+//                {
+//
+//                    popupWindow.dismiss();
+//                   // postPipelineWithCoordinates();
+//                }
+//
+////                if (!validatePhoneNumber(editPhone.getText().toString())) {
+////                    alertMessage(false,"Enter Valid Phone Number");
+////                }
+//            }
+//        });
+//// //
+//    }
     @Override
     public void onResume() {
         super.onResume();
@@ -423,7 +533,8 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 // savetofile();
                 // savetofirebasestorage();
 //                savetodb();
-                postPipelineWithCoordinates();
+                //postPipelineWithCoordinates();
+                submitDetails();
                 Toast.makeText(getContext(), "startLocationUpdates 43", Toast.LENGTH_SHORT).show();
             }
         }
@@ -550,22 +661,22 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 //        }
 //        mJsonArray.put(obj21);
 //        mJsonArray.put(obj31);
-        for(int i = 0; i < mJsonArray.length();i++)
-        {
-         try{
+        for(int i = 0; i < mJsonArray.length();i++) {
+            try {
 
-             LatLng l = new LatLng(mJsonArray.getJSONObject(i).getDouble("Latitude"),
-                            mJsonArray.getJSONObject(i).getDouble("Longitude"));
+                LatLng l = new LatLng(mJsonArray.getJSONObject(i).getDouble("Latitude"),
+                        mJsonArray.getJSONObject(i).getDouble("Longitude"));
                 list.add(l);
             } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                e.printStackTrace();
+            }
         }
         location loc= new location();
         loc.setCoordinates(list);
         loc.setType("Line");
-        loc.setName("Daya");
-        loc.setPhone("9566113456");
+        loc.setName(popupName.getText().toString());
+        loc.setPhone(popupPhone.getText().toString());
+        loc.setVendorusername(mSession.getEmail());
         Gson gson = new Gson();
         String strOrder = gson.toJson(loc);
         new PostJSONAsyncTask().execute(Constants.POST_PIPELINE_URL,strOrder);
@@ -593,7 +704,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
                 HttpPost request = new HttpPost(urls[0]);
                 HttpClient httpclient = new DefaultHttpClient();
-                UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
+               // UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
                 StringEntity se = new StringEntity(urls[1]);
 
                 request.setEntity(se);
@@ -607,7 +718,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                 int status = response.getStatusLine().getStatusCode();
                 if (status == 200) {
                     HttpEntity entity = response.getEntity();
-                    alertMessage("Success");
+
                     String responseOrder = EntityUtils.toString(entity);
 
                     return true;
@@ -621,8 +732,11 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         }
         protected void onPostExecute(Boolean result) {
 
-            dialog.cancel();
+            if ((dialog != null) && dialog.isShowing()) {
+                dialog.cancel();
+            }
             if(result == true){
+                alertMessage("Success");
             }
             else if (result == false)
                 Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();

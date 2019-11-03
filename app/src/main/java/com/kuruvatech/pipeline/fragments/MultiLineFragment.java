@@ -538,7 +538,10 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         }
         protected void onPostExecute(Boolean result) {
 
-            dialog.cancel();
+            if ((dialog != null) && dialog.isShowing()) {
+                dialog.cancel();
+            }
+
             if(result == true){
 
                     try {
@@ -567,67 +570,4 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
         }
     }
-//    public void openlinesfromfirestorage()
-//    {
-//        mDb.collection("pipeline")
-//                .get()
-//                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                        if (task.isSuccessful()) {
-//                            for (QueryDocumentSnapshot document : task.getResult()) {
-//                                //   Log.d(TAG, document.getId() + " => " + document.getData());
-//                                if (document.getData().get("line") != null) {
-//                                    String responseBody = document.getData().get("line").toString();
-////                                Toast.makeText(getActivity(), "DocumentSnapshot data: " + document.getId(), Toast.LENGTH_SHORT)
-////                                .show();
-//                                    //  String responseBody=new String(bytes);
-//                                    try {
-//                                        JSONArray testV = new JSONArray(new String(responseBody));
-//                                        mJsonArray = testV;
-//                                        mPolylineOptions = new PolylineOptions()
-//                                                .color(Color.MAGENTA)
-//                                                .width(mLinewidth)
-//                                                .clickable(mClickabilityCheckbox.isChecked());
-//                                        for (int i = 0; i < mJsonArray.length(); i++) {
-//                                            double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
-//                                            double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
-//                                            LatLng latLng = new LatLng(lat, lon);
-//                                            mPolylineOptions = mPolylineOptions.add(latLng);
-//
-//
-//                                        }
-//                                        mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-//                                    } catch (JSONException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-//                        } else {
-//                            Log.d(TAG, "Error getting documents: ", task.getException());
-//                        }
-//                    }
-//                });
-//
-//    }
-
-//    public void openlinesfromserver()
-//    {
-//        LatLng southwest = new LatLng(14.1603438,75.6205914);
-//        LatLng northeast = new LatLng(14.0510405,75.7768592);
-//        LatLngBounds bounds = new LatLngBounds(southwest,northeast);
-//        String coordinates = new String();
-//        double g =bounds.northeast.longitude;
-//bounds
-//        {
-//                    "coordinates":  [[
-//            [14.1603438,75.6205914],
-//            [14.0697727,75.6018832],
-//            [14.0510405,75.7768592],
-//            [14.2538865,75.7388695],
-//            [14.1603438,75.6205914]
-//          ]]
-//        }
-//    }
-
 }

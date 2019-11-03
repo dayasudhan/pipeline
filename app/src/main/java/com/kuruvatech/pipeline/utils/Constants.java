@@ -16,7 +16,7 @@ public class Constants {
     public static final String GET_PIPELINE_NEARBY_URL = MAIN_URL + "/v1/plinemap/nearby";
     public static final String GET_PIPELINE_WITHIN_URL = MAIN_URL + "/v1/plinemap/geowithin";
     public static final String POST_LETTER_URL = MAIN_URL + "/v1/candidate/suggestion/" +USERNAME;
-
+    public static final String LOGIN_URL = MAIN_URL + "/v1/m/login/";
 
     public static final String FIREBASE_APP = "https://project-8598805513533999178.firebaseio.com";
     //To store the firebase id in shared preferences

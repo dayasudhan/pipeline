@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -14,6 +15,7 @@ import android.os.Bundle;
 
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
+import com.kuruvatech.pipeline.fragments.LogoutFragment;
 import com.kuruvatech.pipeline.fragments.MainFragment;
 import com.kuruvatech.pipeline.fragments.MultiLineFragment;
 import com.kuruvatech.pipeline.fragments.Settingfragment;
@@ -47,6 +49,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import com.kuruvatech.pipeline.utils.SessionManager;
+import com.splunk.mint.Mint;
 public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSelectedListener {
     private RelativeLayout layout;
     private DrawerLayout dLayout;
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     private boolean fromUser=true;
     ViewPagerAdapter adapter;
     Toolbar tb;
+    SessionManager session;
     private ProgressDialog mProgressDialog;
     public boolean isOnline(Context context) {
         ConnectivityManager conMgr = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -74,6 +79,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Mint.initAndStartSession(this.getApplication(), "4c38f221");
+        session = new SessionManager(getApplicationContext());
+        session.checkLogin();
+//        {
+//            startService(new Intent(this, NotificationListener.class));
+//        }
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -119,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
         adapter.addFragment(new MultiLineFragment(), getString(R.string.map));
         adapter.addFragment(new ShareAppFragment(), getString(R.string.share));
         adapter.addFragment(new Settingfragment(), getString(R.string.settings));
+        adapter.addFragment(new LogoutFragment(), getString(R.string.logout));
         viewPager.setAdapter(adapter);
     }
     private void setToolBar() {
@@ -188,17 +200,20 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                     viewPager.setCurrentItem(2);
                     isMainFragmentOpen =  false;
                 }
-                else if(itemId == R.id.settings)
+                else if(itemId == R.id.share)
                 {
                     viewPager.setCurrentItem(3);
                     //frag = new AboutFragment();
                     isMainFragmentOpen =  false;
                 }
-                else if (itemId == R.id.share) {
+                else if (itemId == R.id.settings) {
                     viewPager.setCurrentItem(4);
                     isMainFragmentOpen =  false;
                 }
-
+                else if (itemId == R.id.logout) {
+                    viewPager.setCurrentItem(5);
+                    isMainFragmentOpen =  false;
+                }
                 dLayout.closeDrawers();
                 return true;
             }

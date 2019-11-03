@@ -11,6 +11,7 @@ public class location {
         name = "";
         phone = "";
         paid = false;
+        vendorusername="";
     }
 
     public String getType() {
@@ -56,6 +57,16 @@ public class location {
     ArrayList<LatLng> coordinates ;
     String name;
     String phone;
+
+    public String getVendorusername() {
+        return vendorusername;
+    }
+
+    public void setVendorusername(String vendorusername) {
+        this.vendorusername = vendorusername;
+    }
+
+    String vendorusername;
     boolean paid;
 
 }
