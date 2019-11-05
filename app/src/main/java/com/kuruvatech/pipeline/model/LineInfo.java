@@ -2,7 +2,6 @@ package com.kuruvatech.pipeline.model;
 
 public class LineInfo {
 
-
     public String getName() {
         return name;
     }
@@ -21,8 +20,19 @@ public class LineInfo {
 
     location loc;
     String name;
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    String phone;
     public LineInfo() {
         loc = new location();
         name ="";
+        phone ="";
     }
 }

@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
@@ -46,17 +47,9 @@ import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.VisibleRegion;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.google.gson.Gson;
-import com.kuruvatech.pipeline.MainActivity;
 import com.kuruvatech.pipeline.R;
 import com.kuruvatech.pipeline.model.Coordinate;
 import com.kuruvatech.pipeline.model.LineInfo;
@@ -64,7 +57,6 @@ import com.kuruvatech.pipeline.model.location;
 import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -87,28 +79,20 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import static android.content.ContentValues.TAG;
 
 /**
  * Created by dayas on 05-08-2019.
  */
 
-
-
-
-
 public class MultiLineFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMapClickListener, GoogleMap.OnCameraIdleListener,
         AdapterView.OnItemSelectedListener{
-
-
 
     View rootview;
 
@@ -145,7 +129,7 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     private Polyline mMutablePolyline;
     private PolylineOptions mPolylineOptions ;
 
-    private CheckBox mClickabilityCheckbox;
+    //private CheckBox mClickabilityCheckbox;
     SupportMapFragment mFragment;
     FragmentManager fragmentManager;
     private GoogleApiClient mGoogleApiClient;
@@ -166,7 +150,7 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     private double wayLatitude = 0.0, wayLongitude = 0.0;
     JSONArray mJsonArray = new JSONArray();
     boolean mIsStartPipeLine =false;
-    private ToggleButton togglePlayButton, togglePauseButton;
+    private Button togglePlayButton;
     FirebaseFirestore mDb;
     FirebaseStorage mStorage ;
     Gson gson ;
@@ -185,29 +169,29 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         mDb = FirebaseFirestore.getInstance();
  //Get a non-default Storage bucket
 
-        mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
-        togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
-        togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
-//        togglePlayButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//               // openfileFromFirebaseStorage();
-//
-//
-//            }
-//        });
+//        mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
+        togglePlayButton = (Button) rootview.findViewById(R.id.maptypebutton);
+   //     togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
+        togglePlayButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                int t = mMap.getMapType();
+                t = (t + 1) % 5;
+                if(t == 0)
+                {
+                    t++;
+                }
+                mMap.setMapType(t);
+                //Toast.makeText(getContext(), mMap.getMapType().toString(), Toast.LENGTH_SHORT).show();
+
+                   // GoogleMap.MAP_TYPE_NONE
+            }
+        });
+
         mFragment = (SupportMapFragment)fragmentManager.findFragmentById(R.id.map);
         mFragment.getMapAsync(this);
         return rootview;
     }
 
-
-    private String[] getResourceStrings(int[] resourceIds) {
-        String[] strings = new String[resourceIds.length];
-        for (int i = 0; i < resourceIds.length; i++) {
-            strings[i] = getString(resourceIds[i]);
-        }
-        return strings; //08202923069
-    }
     @Override
     public void onResume() {
         super.onResume();
@@ -245,8 +229,8 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
             // Permission to access the location is missing.
             PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LREQUEST_CODE_ASK_PERMISSIONS,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
-
         }
+
         //  savetofile();
         mMap =  map;
         mLocationcallback = new LocationCallback() {
@@ -268,14 +252,14 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         mPolylineOptions = new PolylineOptions()
                 .color(Color.RED)
                 .width(mLinewidth)
-                .clickable(mClickabilityCheckbox.isChecked());
+                .clickable(true);
         // .add(KURUVA, KURUVA2, KURUVA3, KURUVA4);
 
 
         mMutablePolyline = map.addPolyline(mPolylineOptions);
         mMutablePolyline.setWidth(mLinewidth);
         mMutablePolyline.setPattern(PATTERN_MIXED);
-
+       // mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         // Move the map so that it is centered on the mutable polyline.
         // map.moveCamera(CameraUpdateFactory.newLatLngZoom(MELBOURNE, 5));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 10));
@@ -286,6 +270,10 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
             public void onPolylineClick(Polyline polyline) {
                 // Flip the values of the red, green and blue components of the polyline's color.
                 polyline.setColor(polyline.getColor() ^ 0x00ffffff);
+                polyline.getTag().toString();
+                Toast.makeText(getActivity(),  polyline.getTag().toString(), Toast.LENGTH_LONG).show();
+               // polyline.getId()
+
             }
         });
         //openlinesfromfirestorage();
@@ -339,17 +327,11 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     }
 
 
-
-    /**
-     * Toggles the clickability of the polyline based on the state of the View that triggered this
-     * call.
-     * This callback is defined on the CheckBox in the layout for this Activity.
-     */
-    public void toggleClickability(View view) {
-        if (mMutablePolyline != null) {
-            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
-        }
-    }
+//    public void toggleClickability(View view) {
+//        if (mMutablePolyline != null) {
+//            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
+//        }
+//    }
 
     public void getCurrentLocation()
     {
@@ -452,9 +434,6 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL,strbox);
     }
 
-
-
-
     public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
         Dialog dialog;
         public  PostJSONAsyncTask()
@@ -511,8 +490,17 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
                                                 lineInfo.getLoc().getCoordinates().add(new LatLng(objlat, objlong));
+
                                             }
                                         }
+                                    }
+                                    if(obj.has("name"))
+                                    {
+                                        lineInfo.setName(obj.getString("name"));
+                                    }
+                                    if(obj.has("phone"))
+                                    {
+                                        lineInfo.setPhone(obj.getString("phone"));
                                     }
                                 }
                             }
@@ -545,13 +533,14 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
             if(result == true){
 
                     try {
-                        for (int i = 0; i < lineInfoList.size(); i++) {
+                       // int sx = lineInfoList.size() - 3;
+                        for (int i = 0 ; i < lineInfoList.size() ; i++) {
                             location loc = lineInfoList.get(i).getLoc();
                             int points  = loc.getCoordinates().size();
                             mPolylineOptions = new PolylineOptions()
                                     .color(Color.MAGENTA)
                                     .width(mLinewidth)
-                                    .clickable(mClickabilityCheckbox.isChecked());
+                                    .clickable(true);
                             for (int j = 0; j < points; j++) {
                                 double lat = loc.getCoordinates().get(j).latitude;
                                 double lon = loc.getCoordinates().get(j).longitude;
@@ -559,6 +548,9 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                 mPolylineOptions = mPolylineOptions.add(latLng);
                             }
                             mMutablePolyline = mMap.addPolyline(mPolylineOptions);
+                            String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) ";
+                            mMutablePolyline.setTag(tag);
+                            int a = 100;
                         }
 
                     } catch (Exception e) {
