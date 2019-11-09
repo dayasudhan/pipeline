@@ -15,6 +15,7 @@ public class Constants {
     public static final String POST_PIPELINE_URL = MAIN_URL + "/v1/pline/b";
     public static final String GET_PIPELINE_NEARBY_URL = MAIN_URL + "/v1/plinemap/nearby";
     public static final String GET_PIPELINE_WITHIN_URL = MAIN_URL + "/v1/plinemap/geowithin";
+    public static final String GET_PIPELINE_VENDOR = MAIN_URL + "/v1/plinemap/";
     public static final String POST_LETTER_URL = MAIN_URL + "/v1/candidate/suggestion/" +USERNAME;
     public static final String LOGIN_URL = MAIN_URL + "/v1/m/login/";
 

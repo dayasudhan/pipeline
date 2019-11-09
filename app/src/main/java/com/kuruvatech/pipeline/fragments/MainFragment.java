@@ -138,7 +138,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     private Polyline mMutablePolyline;
     private PolylineOptions mPolylineOptions ;
 
-    private CheckBox mClickabilityCheckbox;
+  //  private CheckBox mClickabilityCheckbox;
     SupportMapFragment mFragment;
     FragmentManager fragmentManager;
     private GoogleApiClient mGoogleApiClient;
@@ -161,6 +161,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
     private ToggleButton togglePlayButton, togglePauseButton;
     SessionManager mSession;
     Gson gson ;
+    private Button maptypeButton;
     ViewGroup mContainer;
     AlertDialog alertDialog;
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -177,7 +178,22 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         ///
        // submitDetails();
        // showCustomViewAlertDialog();
-        mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
+     //   mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
+        maptypeButton = (Button) rootview.findViewById(R.id.maptypebutton);
+        maptypeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                int t = mMap.getMapType();
+                t = (t + 1) % 5;
+                if(t == 0)
+                {
+                    t++;
+                }
+                mMap.setMapType(t);
+                //Toast.makeText(getContext(), mMap.getMapType().toString(), Toast.LENGTH_SHORT).show();
+
+                // GoogleMap.MAP_TYPE_NONE
+            }
+        });
         togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
         togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
         togglePlayButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -358,7 +374,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         mPolylineOptions = new PolylineOptions()
                 .color(Color.RED)
                 .width(mLinewidth)
-                .clickable(mClickabilityCheckbox.isChecked());
+                .clickable(true);
         mMutablePolyline = map.addPolyline(mPolylineOptions);
         mMutablePolyline.setWidth(mLinewidth);
         mMutablePolyline.setPattern(PATTERN_MIXED);
@@ -416,11 +432,11 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         }
     }
 
-    public void toggleClickability(View view) {
-        if (mMutablePolyline != null) {
-            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
-        }
-    }
+//    public void toggleClickability(View view) {
+//        if (mMutablePolyline != null) {
+//            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
+//        }
+//    }
 
     public void getCurrentLocation()
     {

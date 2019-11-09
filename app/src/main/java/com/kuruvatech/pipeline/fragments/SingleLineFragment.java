@@ -1,28 +1,23 @@
 package com.kuruvatech.pipeline.fragments;
-
 import android.Manifest;
+import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
@@ -40,53 +35,67 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PatternItem;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
+import com.google.gson.Gson;
 import com.kuruvatech.pipeline.R;
+import com.kuruvatech.pipeline.model.Coordinate;
+import com.kuruvatech.pipeline.model.LineInfo;
+import com.kuruvatech.pipeline.model.location;
 import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
+import com.kuruvatech.pipeline.utils.SessionManager;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.io.IOException;
+import android.net.ParseException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static android.content.ContentValues.TAG;
-import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
 
 /**
  * Created by dayas on 05-08-2019.
  */
 
-
-
-
-
 public class SingleLineFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMapClickListener,
+        GoogleMap.OnMapClickListener, GoogleMap.OnCameraIdleListener,
         AdapterView.OnItemSelectedListener{
-
-
 
     View rootview;
 
@@ -109,8 +118,6 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
 
 
     private static final String LOCATIONS = "Locations";
-//    private static final String LATITUDE = "Latitude";
-//    private static final String LONGITUDE = "Longitude";
     private static final String LATITUDE = "Lat";
     private static final String LONGITUDE = "Logt";
     private static final int PATTERN_DASH_LENGTH_PX = 50;
@@ -125,7 +132,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     private Polyline mMutablePolyline;
     private PolylineOptions mPolylineOptions ;
 
-    private CheckBox mClickabilityCheckbox;
+    //private CheckBox mClickabilityCheckbox;
     SupportMapFragment mFragment;
     FragmentManager fragmentManager;
     private GoogleApiClient mGoogleApiClient;
@@ -146,62 +153,48 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     private double wayLatitude = 0.0, wayLongitude = 0.0;
     JSONArray mJsonArray = new JSONArray();
     boolean mIsStartPipeLine =false;
-    private ToggleButton togglePlayButton, togglePauseButton;
+    private Button togglePlayButton;
     FirebaseFirestore mDb;
     FirebaseStorage mStorage ;
-//    private static final int[] PATTERN_TYPE_NAME_RESOURCE_IDS;
-//
-//    static {
-//        PATTERN_TYPE_NAME_RESOURCE_IDS = new int[]{
-//                R.string.pattern_solid, // Default
-//                R.string.pattern_dashed,
-//                R.string.pattern_dotted,
-//                R.string.pattern_mixed,
-//        };
-//    }
-
+    Gson gson ;
+    ArrayList<LineInfo> lineInfoList ;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        //MobileAds.initialize(getActivity(), Constants.ADMOBAPPID);
-        rootview = inflater.inflate(R.layout.mypipeline, container, false);
+        // MobileAds.initialize(getActivity(), Constants.ADMOBAPPID);
+        rootview = inflater.inflate(R.layout.fragment_multiline, container, false);
         fragmentManager=getChildFragmentManager();
+        gson = new Gson();
+
+
         mDb = FirebaseFirestore.getInstance();
-// Get a non-default Storage bucket
+        //Get a non-default Storage bucket
 
-        mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
-        togglePlayButton = (ToggleButton) rootview.findViewById(R.id.togglebutton);
-        togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
-        togglePlayButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //openfileFromFirebaseStorage();
+//        mClickabilityCheckbox = (CheckBox) rootview.findViewById(R.id.toggleClickability);
+        togglePlayButton = (Button) rootview.findViewById(R.id.maptypebutton);
+        //     togglePauseButton = (ToggleButton) rootview.findViewById(R.id.togglebutton2);
+        togglePlayButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                int t = mMap.getMapType();
+                t = (t + 1) % 5;
+                if(t == 0)
+                {
+                    t++;
+                }
+                mMap.setMapType(t);
+                //Toast.makeText(getContext(), mMap.getMapType().toString(), Toast.LENGTH_SHORT).show();
 
-                openlineFromFireStore();
+                // GoogleMap.MAP_TYPE_NONE
             }
         });
-//        togglePauseButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                //startLocationUpdates(isChecked);
-//                togglePauseButton.setVisibility(.INVISIBLE);
-//
-//            }
-//        });
 
         mFragment = (SupportMapFragment)fragmentManager.findFragmentById(R.id.map);
         mFragment.getMapAsync(this);
         return rootview;
     }
 
-
-    private String[] getResourceStrings(int[] resourceIds) {
-        String[] strings = new String[resourceIds.length];
-        for (int i = 0; i < resourceIds.length; i++) {
-            strings[i] = getString(resourceIds[i]);
-        }
-        return strings; //08202923069
-    }
     @Override
     public void onResume() {
         super.onResume();
@@ -239,8 +232,8 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
             // Permission to access the location is missing.
             PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LREQUEST_CODE_ASK_PERMISSIONS,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
-
         }
+
         //  savetofile();
         mMap =  map;
         mLocationcallback = new LocationCallback() {
@@ -249,12 +242,12 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
             public void onLocationResult(LocationResult locationResult) {
 
                 // do work here
-             //   onLocationChanged(locationResult.getLastLocation());
+                //   onLocationChanged(locationResult.getLastLocation());
             }
         };
         // Override the default conte
         // nt description on the view, for accessibility mode.
-        map.setContentDescription(getString(R.string.polyline_demo_description));
+        mMap.setContentDescription(getString(R.string.polyline_demo_description));
 
 
 //        int color = Color.HSVToColor(
@@ -262,31 +255,47 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         mPolylineOptions = new PolylineOptions()
                 .color(Color.RED)
                 .width(mLinewidth)
-                .clickable(mClickabilityCheckbox.isChecked());
+                .clickable(true);
         // .add(KURUVA, KURUVA2, KURUVA3, KURUVA4);
 
 
         mMutablePolyline = map.addPolyline(mPolylineOptions);
-
-
-
         mMutablePolyline.setWidth(mLinewidth);
         mMutablePolyline.setPattern(PATTERN_MIXED);
+        // mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         // Move the map so that it is centered on the mutable polyline.
         // map.moveCamera(CameraUpdateFactory.newLatLngZoom(MELBOURNE, 5));
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 18));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 10));
         // map.setMyLocationEnabled(true);
         // Add a listener for polyline clicks that changes the clicked polyline's color.
-        map.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
+        mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
             public void onPolylineClick(Polyline polyline) {
                 // Flip the values of the red, green and blue components of the polyline's color.
                 polyline.setColor(polyline.getColor() ^ 0x00ffffff);
+                polyline.getTag().toString();
+                Toast.makeText(getActivity(),  polyline.getTag().toString(), Toast.LENGTH_LONG).show();
+                // polyline.getId()
+
             }
         });
+        //openlinesfromfirestorage();
+//        map.setLatLngBoundsForCameraTarget();
+
         enableMyLocation();
-        map.setOnMyLocationButtonClickListener(this);
-        map.setOnMapClickListener(this);
+        mMap.setOnMyLocationButtonClickListener(this);
+        mMap.setOnMapClickListener(this);
+     //   mMap.setOnCameraIdleListener(this);
+//        map.onCameraChange(new GoogleMap.OnCameraChangeListener() {
+//
+//            @Override
+//            public void onCameraChange(CameraPosition arg0) {
+//                moveMapCameraToBoundsAndInitClusterkraf();
+//            }
+//        });
+//        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+//        LatLngBounds latLngBounds = visibleRegion.latLngBounds;
+        getPipelineWithinCoordinates();
 
     }
 
@@ -309,20 +318,6 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         }
     }
 
-//    private List<PatternItem> getSelectedPattern(int pos) {
-//        switch (PATTERN_TYPE_NAME_RESOURCE_IDS[pos]) {
-//            case R.string.pattern_solid:
-//                return null;
-//            case R.string.pattern_dotted:
-//                return PATTERN_DOTTED;
-//            case R.string.pattern_dashed:
-//                return PATTERN_DASHED;
-//            case R.string.pattern_mixed:
-//                return PATTERN_MIXED;
-//            default:
-//                return null;
-//        }
-//    }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
@@ -335,17 +330,11 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     }
 
 
-
-    /**
-     * Toggles the clickability of the polyline based on the state of the View that triggered this
-     * call.
-     * This callback is defined on the CheckBox in the layout for this Activity.
-     */
-    public void toggleClickability(View view) {
-        if (mMutablePolyline != null) {
-            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
-        }
-    }
+//    public void toggleClickability(View view) {
+//        if (mMutablePolyline != null) {
+//            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
+//        }
+//    }
 
     public void getCurrentLocation()
     {
@@ -390,103 +379,12 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         mGoogleApiClient.connect();//kasturbainsurance@gmail.com
     }
 
-    public void openfileFromFirebaseStorage()
-    {
-            mStorage = FirebaseStorage.getInstance();
-            StorageReference storageRef = mStorage.getReference();
-            // Create a reference to "mountains.jpg"
-            //StorageReference mountainsRef = storageRef.child(h+".json");
-
-            // Create a reference to 'images/mountains.jpg'
-           StorageReference pipelineRef = mStorage.getReferenceFromUrl("gs://pipeline-30aa5.appspot.com/pipeline/08-04-2019-2-4056.json");
-            StorageReference pipelineRef2 = storageRef.child("/pipeline/08-06-2019-12-5039.json");
-            final long ONE_MEGABYTE = 1024 * 1024;
-            Task<byte[]> task = pipelineRef2.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                @Override
-                public void onSuccess(byte[] bytes) {
-                    String responseBody=new String(bytes);
-                    try {
-                        JSONObject testV=new JSONObject(new String(responseBody));
-                        mJsonArray = (JSONArray) testV.get(LOCATIONS);
-
-                        for(int i = 0; i < mJsonArray.length(); i++)
-                        {
-                            double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
-                            double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
-                            LatLng latLng = new LatLng(lat,lon);
-                            mPolylineOptions = mPolylineOptions.add(latLng);
-
-                            mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-                        }
-
-                      //  JSONArray ls = la.getJSONArray(LOCATIONS);
-            //            mJsonArray = testV.getJSONArray("Locations");
-                        int a = 122;
-                        a =a+2;
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    // Data for "images/island.jpg" is returns, use this as needed
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                }
-            });
-    }
-    public void openlineFromFireStore()
-    {
-        DocumentReference docRef = mDb.collection("pipeline").document("2F2LOO78qJe7RYdhXWW5ob");
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-//                        Toast.makeText(getActivity(), "DocumentSnapshot data: " + document.getData().get("line"), Toast.LENGTH_SHORT)
-//                                .show();
-                        String responseBody =   document.getData().get("line").toString();
-                        //String responseBody=new String(bytes);
-                        try {
-                            JSONArray testV=new JSONArray(new String(responseBody));
-                            mJsonArray = testV;
-//                            Toast.makeText(getActivity(), "DocumentSnapshot data23: " + mJsonArray.toString(), Toast.LENGTH_SHORT)
-//                                    .show();
-                            for(int i = 0; i < mJsonArray.length(); i++)
-                            {
-                                double lat = Double.parseDouble(mJsonArray.getJSONObject(i).get(LATITUDE).toString());
-                                double lon = Double.parseDouble(mJsonArray.getJSONObject(i).get(LONGITUDE).toString());
-                                LatLng latLng = new LatLng(lat,lon);
-                                mPolylineOptions = mPolylineOptions.add(latLng);
-
-                                mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-                            }
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        //Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                    } else {
-                        Toast.makeText(getActivity(), "No such document" , Toast.LENGTH_SHORT)
-                                .show();
-                        Log.d(TAG, "No such document");
-                    }
-                } else {
-                    Toast.makeText(getActivity(), "get failed with " , Toast.LENGTH_SHORT)
-                            .show();
-                    Log.d(TAG, "get failed with ", task.getException());
-                }
-            }
-        });
-    }
-
     @Override
     public void onMapClick(LatLng latLng) {
 
     }
     @Override
-    public void onRequestPermissionsResult(int requestCode,@NonNull String permissions[], @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case LREQUEST_CODE_ASK_PERMISSIONS:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -514,6 +412,146 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                 break;
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
+    @Override
+    public void onCameraIdle() {
+        VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
+        LatLngBounds latLngBounds = visibleRegion.latLngBounds;
+
+    }
+
+    public void getPipelineWithinCoordinates()
+    {
+        SessionManager mSession = new SessionManager(getContext());
+       String url = Constants.GET_PIPELINE_VENDOR + mSession.getEmail();
+        new PostJSONAsyncTask().execute(url);
+    }
+
+    public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
+        Dialog dialog;
+        public  PostJSONAsyncTask()
+        {
+        }
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog = new Dialog(getActivity(),android.R.style.Theme_Translucent);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.custom_progress_dialog);
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.show();
+            dialog.setCancelable(true);
+        }
+
+        @Override
+        protected Boolean doInBackground(String... urls) {
+            try {
+                ArrayList<NameValuePair> postParameters = new ArrayList<NameValuePair>();
+                HttpGet request = new HttpGet(urls[0]);
+                HttpClient httpclient = new DefaultHttpClient();
+           //     UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(postParameters);
+                //StringEntity se = new StringEntity(urls[1]);
+             //   request.setEntity(se);
+                request.addHeader(Constants.SECUREKEY_KEY, Constants.SECUREKEY_VALUE);
+                request.addHeader(Constants.VERSION_KEY, Constants.VERSION_VALUE);
+                request.addHeader(Constants.CLIENT_KEY, Constants.CLIENT_VALUE);
+                HttpResponse response = httpclient.execute(request);
+
+                int status = response.getStatusLine().getStatusCode();
+                if (status == 200) {
+                    HttpEntity entity = response.getEntity();
+
+                    String responseOrder = EntityUtils.toString(entity);
+                    try {
+                        lineInfoList = new ArrayList<LineInfo>();
+                        JSONArray jsonArray = new JSONArray(responseOrder);
+                        for(int i = 0; i < jsonArray.length(); i++)
+                        {
+                            LineInfo lineInfo = null;
+                            try {
+                                lineInfo = gson.fromJson(jsonArray.getString(i), LineInfo.class);
+                                JSONObject obj = jsonArray.getJSONObject(i);
+                                {
+                                    if (obj.has("location")) {
+                                        JSONObject obj2 = obj.getJSONObject("location");
+                                        if (obj2.has("coordinates")){
+                                            JSONArray obj3 = obj2.getJSONArray("coordinates");
+                                            for (int j = 0; j < obj3.length(); j++) {
+                                                JSONArray obj4 = obj3.getJSONArray(j);
+                                                Double objlat = obj4.getDouble(0);
+                                                Double objlong = obj4.getDouble(1);
+                                                lineInfo.getLoc().getCoordinates().add(new LatLng(objlat, objlong));
+
+                                            }
+                                        }
+                                    }
+                                    if(obj.has("name"))
+                                    {
+                                        lineInfo.setName(obj.getString("name"));
+                                    }
+                                    if(obj.has("phone"))
+                                    {
+                                        lineInfo.setPhone(obj.getString("phone"));
+                                    }
+                                }
+                            }
+                            catch(Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+                            String str = lineInfo.getName();
+                            lineInfoList.add(lineInfo);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    return true;
+                }
+            } catch (ParseException e1) {
+                e1.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        }
+        protected void onPostExecute(Boolean result) {
+
+            if ((dialog != null) && dialog.isShowing()) {
+                dialog.cancel();
+            }
+
+            if(result == true){
+
+                try {
+                    // int sx = lineInfoList.size() - 3;
+                    for (int i = 0 ; i < lineInfoList.size() ; i++) {
+                        location loc = lineInfoList.get(i).getLoc();
+                        int points  = loc.getCoordinates().size();
+                        mPolylineOptions = new PolylineOptions()
+                                .color(Color.MAGENTA)
+                                .width(mLinewidth)
+                                .clickable(true);
+                        for (int j = 0; j < points; j++) {
+                            double lat = loc.getCoordinates().get(j).latitude;
+                            double lon = loc.getCoordinates().get(j).longitude;
+                            LatLng latLng = new LatLng(lat, lon);
+                            mPolylineOptions = mPolylineOptions.add(latLng);
+                        }
+                        mMutablePolyline = mMap.addPolyline(mPolylineOptions);
+                        String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) ";
+                        mMutablePolyline.setTag(tag);
+                        int a = 100;
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+            else if (result == false)
+                Toast.makeText(getContext(), "Unable to fetch data from server", Toast.LENGTH_LONG).show();
         }
     }
 }

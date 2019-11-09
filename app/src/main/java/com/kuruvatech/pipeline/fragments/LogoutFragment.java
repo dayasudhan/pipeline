@@ -33,8 +33,8 @@ public class LogoutFragment extends Fragment {
         // Session class instance
         session = new SessionManager(getActivity().getApplicationContext());
 
-        ((MainActivity) getActivity())
-                .setActionBarTitle("About Me");
+//        ((MainActivity) getActivity())
+//                .setActionBarTitle("About Me");
         // Button logout
         btnLogout = (Button)rootview.findViewById(R.id.btnLogout);
         // get user data from session

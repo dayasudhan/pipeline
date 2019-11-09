@@ -126,8 +126,8 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(new MainFragment(), getString(R.string.home));
-        adapter.addFragment(new SingleLineFragment(), getString(R.string.myline));
         adapter.addFragment(new MultiLineFragment(), getString(R.string.map));
+        adapter.addFragment(new SingleLineFragment(), getString(R.string.myline));
         adapter.addFragment(new ShareAppFragment(), getString(R.string.share));
         adapter.addFragment(new Settingfragment(), getString(R.string.settings));
         adapter.addFragment(new LogoutFragment(), getString(R.string.logout));
@@ -193,11 +193,11 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                     isMainFragmentOpen =  true;
                 }
                 else if (itemId == R.id.myline) {
-                    viewPager.setCurrentItem(1);
+                    viewPager.setCurrentItem(2);
                     isMainFragmentOpen =  false;
                 }
                 else if (itemId == R.id.multiline) {
-                    viewPager.setCurrentItem(2);
+                    viewPager.setCurrentItem(1);
                     isMainFragmentOpen =  false;
                 }
                 else if(itemId == R.id.share)
