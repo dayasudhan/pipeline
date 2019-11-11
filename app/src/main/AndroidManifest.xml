@@ -29,7 +29,7 @@
         </activity>
          <activity
              android:name=".LoginActivity"
-             android:label="Vendor Login" >
+              >
              <intent-filter>
                  <action android:name="android.intent.action.MAIN" />
 
