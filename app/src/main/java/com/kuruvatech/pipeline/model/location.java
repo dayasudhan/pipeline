@@ -10,8 +10,12 @@ public class location {
         coordinates = new ArrayList<LatLng>();
         name = "";
         phone = "";
-        paid = false;
+        paid = 0;
         vendorusername="";
+        size="";
+        pipe_type="";
+        purpose="";
+        remarks="";
     }
 
     public String getType() {
@@ -46,17 +50,73 @@ public class location {
         this.phone = phone;
     }
 
-    public boolean isPaid() {
+    public int getPaid() {
         return paid;
     }
 
-    public void setPaid(boolean paid) {
+    public void setPaid(int paid) {
         this.paid = paid;
     }
     String type;
     ArrayList<LatLng> coordinates ;
     String name;
     String phone;
+    String size;
+
+    public String getPipe_type() {
+        return pipe_type;
+    }
+
+    public void setPipe_type(String pipe_type) {
+        this.pipe_type = pipe_type;
+    }
+
+    String pipe_type;
+    String purpose;
+    String remarks;
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    String date;
+    public String getSizeofpipeline() {
+        return size;
+    }
+
+    public void setSizeofpipeline(String sizeofpipeline) {
+        this.size = sizeofpipeline;
+    }
+
+
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = purpose;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 
     public String getVendorusername() {
         return vendorusername;
@@ -67,6 +127,6 @@ public class location {
     }
 
     String vendorusername;
-    boolean paid;
+    int paid;
 
 }

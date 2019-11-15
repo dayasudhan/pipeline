@@ -2,14 +2,14 @@ package com.kuruvatech.pipeline.model;
 
 public class LineInfo {
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
+//
     public location getLoc() {
         return loc;
     }
@@ -19,7 +19,7 @@ public class LineInfo {
     }
 
     location loc;
-    String name;
+//    String name;
 
     public String getPhone() {
         return phone;
@@ -32,7 +32,7 @@ public class LineInfo {
     String phone;
     public LineInfo() {
         loc = new location();
-        name ="";
-        phone ="";
+//        name ="";
+//        phone ="";
     }
 }

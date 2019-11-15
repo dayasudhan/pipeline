@@ -111,7 +111,7 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
 
     View rootview;
     Button popupSubmitBtn;
-    EditText popupName,popupPhone;
+    EditText popupName,popupPhone,popupType,popupSize,popopuPurpose,popupRemarks;
     /**
      * Request code for location permission request.
      *
@@ -246,6 +246,10 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
                             popupSubmitBtn = (Button) loginFormView.findViewById(R.id.btn_send);
                             popupName=(EditText)loginFormView.findViewById(R.id.input_name);
                             popupPhone=(EditText)loginFormView.findViewById(R.id.input_phone);
+                            popupType=(EditText)loginFormView.findViewById(R.id.input_type);
+                            popopuPurpose=(EditText)loginFormView.findViewById(R.id.input_purpose);
+                            popupSize=(EditText)loginFormView.findViewById(R.id.input_size);
+                            popupRemarks=(EditText)loginFormView.findViewById(R.id.input_remarks);
                             if (popupName.getText().toString().matches("")) {
                                 //Toast.makeText(getContext(), "Please Enter Customer Name", Toast.LENGTH_SHORT).show();
                                 alertMessage("Please Enter Customer Name");
@@ -544,14 +548,14 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
             }
             else
             {
-                Toast.makeText(getContext(), "startLocationUpdates 42", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "stopped recording pipeline", Toast.LENGTH_SHORT).show();
                 getFusedLocationProviderClient(getActivity()).removeLocationUpdates(mLocationcallback);
                 // savetofile();
                 // savetofirebasestorage();
 //                savetodb();
                 //postPipelineWithCoordinates();
                 submitDetails();
-                Toast.makeText(getContext(), "startLocationUpdates 43", Toast.LENGTH_SHORT).show();
+               // Toast.makeText(getContext(), "startLocationUpdates 43", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -693,6 +697,10 @@ public class MainFragment extends Fragment  implements OnMapReadyCallback, Googl
         loc.setName(popupName.getText().toString());
         loc.setPhone(popupPhone.getText().toString());
         loc.setVendorusername(mSession.getEmail());
+        loc.setPipe_type(popupType.getText().toString());
+        loc.setPurpose(popopuPurpose.getText().toString());
+        loc.setSizeofpipeline(popupSize.getText().toString());
+        loc.setRemarks(popupRemarks.getText().toString());
         Gson gson = new Gson();
         String strOrder = gson.toJson(loc);
         new PostJSONAsyncTask().execute(Constants.POST_PIPELINE_URL,strOrder);

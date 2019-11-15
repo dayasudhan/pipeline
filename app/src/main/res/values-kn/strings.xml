@@ -13,8 +13,20 @@
     <!--<string name="title_upload_quality">Select language</string>-->
     <string name="summary_language">ಕನ್ನಡ ಅಥವಾ ಇಂಗ್ಲೀಶ್</string>
     <string name="tell_friend">ಈ ಅಪ್ಲಿಕೇಶನ್ ಹಂಚಿ</string>
-
+    <string name="name">Customer Name</string>
+    <string name="size">Size of Pipe</string>
+    <string name="type">Type of pipe</string>
+    <string name="purpose">Purpose of PipeLine</string>
+    <string name="ramarks">Remarks</string>
+    <string name="email">Email</string>
+    <string name="date">Date of Installation</string>
+    <string name="phone">Phone No</string>
     <string name="hint_name">ಪೂರ್ಣ ಹೆಸರು</string>
+    <string name="hint_size">Customer Name</string>
+    <string name="hint_type">Customer Name</string>
+    <string name="hint_purpose">Customer Name</string>
+    <string name="hint_ramarks">Customer Name</string>
+    <string name="hint_date">Date of Installation</string>
     <string name="hint_email">ಇಮೇಲ್</string>
     <string name="btn_sign_up">ಹೊಸ ಪೈಪ್‌ಲೈನ್ ನೋಂದಾಯಿಸಿ</string>
     <string name="hint_phone">ದೂರವಾಣಿ ಸಂಖ್ಯೆ</string>

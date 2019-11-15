@@ -157,7 +157,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     FirebaseFirestore mDb;
     FirebaseStorage mStorage ;
     Gson gson ;
-    ArrayList<LineInfo> lineInfoList ;
+    ArrayList<location> lineInfoList ;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -464,13 +464,13 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
 
                     String responseOrder = EntityUtils.toString(entity);
                     try {
-                        lineInfoList = new ArrayList<LineInfo>();
+                        lineInfoList = new ArrayList<location>();
                         JSONArray jsonArray = new JSONArray(responseOrder);
                         for(int i = 0; i < jsonArray.length(); i++)
                         {
-                            LineInfo lineInfo = null;
+                            location lineInfo = null;
                             try {
-                                lineInfo = gson.fromJson(jsonArray.getString(i), LineInfo.class);
+                                lineInfo = gson.fromJson(jsonArray.getString(i), location.class);
                                 JSONObject obj = jsonArray.getJSONObject(i);
                                 {
                                     if (obj.has("location")) {
@@ -481,8 +481,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                                 JSONArray obj4 = obj3.getJSONArray(j);
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
-                                                lineInfo.getLoc().getCoordinates().add(new LatLng(objlat, objlong));
-
+                                                lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
                                             }
                                         }
                                     }
@@ -493,6 +492,26 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                     if(obj.has("phone"))
                                     {
                                         lineInfo.setPhone(obj.getString("phone"));
+                                    }
+                                    if(obj.has("size"))
+                                    {
+                                        lineInfo.setSizeofpipeline(obj.getString("size"));
+                                    }
+                                    if(obj.has("purpose"))
+                                    {
+                                        lineInfo.setPurpose(obj.getString("purpose"));
+                                    }
+                                    if(obj.has("pipe_type"))
+                                    {
+                                        lineInfo.setPipe_type(obj.getString("pipe_type"));
+                                    }
+                                    if(obj.has("remarks"))
+                                    {
+                                        lineInfo.setRemarks(obj.getString("remarks"));
+                                    }
+                                    if(obj.has("date"))
+                                    {
+                                        lineInfo.setDate(obj.getString("date"));
                                     }
                                 }
                             }
@@ -527,7 +546,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                 try {
                     // int sx = lineInfoList.size() - 3;
                     for (int i = 0 ; i < lineInfoList.size() ; i++) {
-                        location loc = lineInfoList.get(i).getLoc();
+                        location loc = lineInfoList.get(i);
                         int points  = loc.getCoordinates().size();
                         mPolylineOptions = new PolylineOptions()
                                 .color(Color.MAGENTA)
