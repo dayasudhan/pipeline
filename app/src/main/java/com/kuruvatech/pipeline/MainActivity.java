@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -16,7 +15,6 @@ import android.os.Bundle;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.kuruvatech.pipeline.fragments.LogoutFragment;
-import com.kuruvatech.pipeline.fragments.MainFragment;
 import com.kuruvatech.pipeline.fragments.MultiLineFragment;
 import com.kuruvatech.pipeline.fragments.Settingfragment;
 import com.kuruvatech.pipeline.fragments.ShareAppFragment;
@@ -125,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     }
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFragment(new MainFragment(), getString(R.string.home));
+      //  adapter.addFragment(new MainFragment(), getString(R.string.home));
         adapter.addFragment(new MultiLineFragment(), getString(R.string.map));
         adapter.addFragment(new SingleLineFragment(), getString(R.string.myline));
         adapter.addFragment(new ShareAppFragment(), getString(R.string.share));
@@ -188,12 +186,13 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 Fragment frag = null;
 
                 int itemId = menuItem.getItemId();
-                if (itemId == R.id.main) {
+//                if (itemId == R.id.main) {
+//                    viewPager.setCurrentItem(0);
+//                    isMainFragmentOpen =  true;
+//                }
+//                else
+                if (itemId == R.id.myline) {
                     viewPager.setCurrentItem(0);
-                    isMainFragmentOpen =  true;
-                }
-                else if (itemId == R.id.myline) {
-                    viewPager.setCurrentItem(2);
                     isMainFragmentOpen =  false;
                 }
                 else if (itemId == R.id.multiline) {
@@ -202,16 +201,16 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 }
                 else if(itemId == R.id.share)
                 {
-                    viewPager.setCurrentItem(3);
+                    viewPager.setCurrentItem(2);
                     //frag = new AboutFragment();
                     isMainFragmentOpen =  false;
                 }
                 else if (itemId == R.id.settings) {
-                    viewPager.setCurrentItem(4);
+                    viewPager.setCurrentItem(3);
                     isMainFragmentOpen =  false;
                 }
                 else if (itemId == R.id.logout) {
-                    viewPager.setCurrentItem(5);
+                    viewPager.setCurrentItem(4);
                     isMainFragmentOpen =  false;
                 }
                 dLayout.closeDrawers();

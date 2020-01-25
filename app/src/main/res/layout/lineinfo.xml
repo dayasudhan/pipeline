@@ -112,19 +112,19 @@
             android:text="" />
 
     </TableRow>
-    <TableRow android:background="#DAE8FC" android:padding="5dp">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textStyle="bold"
-            android:text="@string/ramarks" />
-        <TextView
-            android:id="@+id/infoRemarks"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="" />
+<!--    <TableRow android:background="#DAE8FC" android:padding="5dp">-->
+<!--        <TextView-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:textStyle="bold"-->
+<!--            android:text="@string/ramarks" />-->
+<!--        <TextView-->
+<!--            android:id="@+id/infoRemarks"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_weight="1"-->
+<!--            android:text="" />-->
 
-    </TableRow>
+<!--    </TableRow>-->
 </TableLayout>

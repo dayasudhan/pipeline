@@ -48,9 +48,8 @@
                 android:id="@+id/togglebutton2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textOn="pause"
-                android:textOff="resume"
-                android:visibility="invisible"
+                android:textOn="Resume"
+                android:textOff="Pause"
                 android:layout="@id/togglebutton"
                 />
         </LinearLayout>

@@ -36,6 +36,10 @@
                  <category android:name="android.intent.category.DEFAULT" />
              </intent-filter>
          </activity>
+        <activity android:name=".SingleViewActivity" />
+        <activity
+            android:name=".FullScreenViewActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />

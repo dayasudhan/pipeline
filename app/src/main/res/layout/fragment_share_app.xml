@@ -21,7 +21,7 @@
             android:background="@drawable/buttonselector"
             android:clickable="true"
             android:text="@string/tell_friend"
-            android:textColor="@color/titleTextColor" />
+            android:textColor="@color/Amber" />
         <!--<Button android:id="@+id/btn_send"-->
             <!--android:layout_width="fill_parent"-->
             <!--android:layout_height="wrap_content"-->

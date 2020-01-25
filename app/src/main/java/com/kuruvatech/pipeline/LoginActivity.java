@@ -1,16 +1,22 @@
 package com.kuruvatech.pipeline;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ParseException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,7 +57,7 @@ public class LoginActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "User Login Status: " + session.isLoggedIn(), Toast.LENGTH_LONG).show();
 
         un=(EditText)findViewById(R.id.et_un);
-        pw=(EditText)findViewById(R.id.et_pw);
+       //pw=(EditText)findViewById(R.id.et_pw);
         ok=(Button)findViewById(R.id.btn_login);
        // error=(TextView)findViewById(R.id.tv_error);
         ok.setOnClickListener(new View.OnClickListener() {
@@ -59,24 +65,46 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if (un.getText().toString().matches("")) {
-                    Toast.makeText(getApplicationContext(), "You did not enter a username", Toast.LENGTH_SHORT).show();
+//                if (un.getText().toString().matches("")) {
+//                    Toast.makeText(getApplicationContext(), "You did not enter a username", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//                if (pw.getText().toString().matches("")) {
+//                    Toast.makeText(getApplicationContext(), "You did not enter a password", Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//                String response = null;
+//                try {
+//                       new JSONAsyncTask().execute(Constants.LOGIN_URL, un.getText().toString().trim().toLowerCase(),pw.getText().toString());
+//                } catch (Exception e) {
+//                    un.setText(e.toString());
+//                }
+                if (!validatePhoneNumber(un.getText().toString())) {
+                    //Toast.makeText(getContext(), "Please Enter Valid Customer Phone Number", Toast.LENGTH_SHORT).show();
+                    alertMessage("Enter Valid Phone Number");
                     return;
                 }
-                if (pw.getText().toString().matches("")) {
-                    Toast.makeText(getApplicationContext(), "You did not enter a password", Toast.LENGTH_SHORT).show();
-                    return;
+                else
+                {
+                 //   alertDialog.cancel();
+                  //  postPipelineWithCoordinates();
+                    session.createLoginSession("Pipeline_kuruva", un.getText().toString(),un.getText().toString() );
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                    finish();
                 }
-                String response = null;
-                try {
-                       new JSONAsyncTask().execute(Constants.LOGIN_URL, un.getText().toString().trim().toLowerCase(),pw.getText().toString());
-                } catch (Exception e) {
-                    un.setText(e.toString());
-                }
+
 
             }
         });
 
+    }
+    private static boolean validatePhoneNumber(String phoneNo)
+    {
+        if (phoneNo.matches("\\d{10}"))
+            return true;
+        else if(phoneNo.matches("\\+\\d{12}")) return true;
+        else return false;
     }
     public  class JSONAsyncTask extends AsyncTask<String, Void, Boolean> {
 
@@ -171,7 +199,27 @@ public class LoginActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+    public void alertMessage(String message) {
+        DialogInterface.OnClickListener dialogClickListeneryesno = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
 
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("PipeLine");
+        builder.setMessage(message).setNeutralButton("Ok", dialogClickListeneryesno)
+                .setIcon(R.drawable.ic_launcher_background);
+        final AlertDialog dialog = builder.create();
+        dialog.show(); //show() should be called before dialog.getButton().
+        final Button neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL);
+        LinearLayout.LayoutParams positiveButtonLL = (LinearLayout.LayoutParams) neutralButton.getLayoutParams();
+        positiveButtonLL.gravity = Gravity.CENTER;
+        neutralButton.setLayoutParams(positiveButtonLL);
+    }
     @Override
     public void onBackPressed() {
         super.onBackPressed();

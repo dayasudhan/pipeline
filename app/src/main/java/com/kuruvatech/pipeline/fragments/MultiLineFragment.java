@@ -36,6 +36,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
@@ -53,6 +54,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
 import com.kuruvatech.pipeline.R;
 import com.kuruvatech.pipeline.model.Coordinate;
+import com.kuruvatech.pipeline.model.GeoPoint;
 import com.kuruvatech.pipeline.model.LineInfo;
 import com.kuruvatech.pipeline.model.location;
 import com.kuruvatech.pipeline.utils.Constants;
@@ -63,6 +65,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -239,13 +242,13 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         TextView type = loginFormView.findViewById(R.id.infoType);
         TextView purpose = loginFormView.findViewById(R.id.infoPurpose);
         TextView size = loginFormView.findViewById(R.id.infoSize);
-        TextView remarks = loginFormView.findViewById(R.id.infoRemarks);
+        TextView datetv = loginFormView.findViewById(R.id.infoDate);
         name.setText(obj.getName());
         phone.setText(obj.getPhone());
         type.setText(obj.getType());
         purpose.setText(obj.getPurpose());
         size.setText(obj.getSize());
-        remarks.setText(obj.getRemarks());
+        datetv.setText(obj.getDate());
         builder.setView(loginFormView);
         builder.setNeutralButton("Ok", dialogClickListeneryesno).show();
              //   .setIcon(R.drawable.ic_action_about).show();
@@ -304,7 +307,7 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                 // Flip the values of the red, green and blue components of the polyline's color.
                 polyline.setColor(polyline.getColor() ^ 0x00ffffff);
       //          polyline.getTag().toString();
-               // Toast.makeText(getActivity(),  polyline.getTag().toString(), Toast.LENGTH_LONG).show();
+               // Toast.makeText(getActivity(),  polyline.getT ag().toString(), Toast.LENGTH_LONG).show();
                 alertMessage((location) polyline.getTag());
                // polyline.getId()
 
@@ -468,7 +471,10 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         box.setSouthwestlongitude(southwestlongitude);
 
         String strbox = gson.toJson(box);
-        new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL,strbox);
+
+       //GET_PIPELINE_URL_FINAL_ALL
+        //new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL,strbox);
+        new PostJSONAsyncTask().execute(Constants.GET_PIPELINE_WITHIN_URL_FINAL_ALL,strbox);
     }
 
     public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
@@ -526,8 +532,14 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                                 JSONArray obj4 = obj3.getJSONArray(j);
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
+                                                Double objele = obj4.getDouble(2);
+                                                Double objres = obj4.getDouble(3);
+//                                        1        if(obj4.length() > 2)
+//                                                {
+//                                                    Double objlong = obj4.getDouble(2);
+//                                                }2
                                                 lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
-
+                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,objres));
                                             }
                                         }
                                     }
@@ -603,11 +615,20 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                 double lon = loc.getCoordinates().get(j).longitude;
                                 LatLng latLng = new LatLng(lat, lon);
                                 mPolylineOptions = mPolylineOptions.add(latLng);
+                                if ((j % 20 == 0) || j == 0 || j == (points -1))
+                                {
+                                    double elevation = loc.getElevation().get(j).getElevation();
+                                    mMap.addMarker(new MarkerOptions()
+                                            .position(latLng)
+                                            .title(getString(R.string.elevation))
+                                            .snippet(String.valueOf(elevation))
+                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_marker)));
+                                }
                             }
                             mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-                            String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) " + "Size:" + lineInfoList.get(i).getSizeofpipeline();
+                           // String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) " + "Size:" + lineInfoList.get(i).getSizeofpipeline();
                             mMutablePolyline.setTag(lineInfoList.get(i));
-                            int a = 100;
+
                         }
 
                     } catch (Exception e) {

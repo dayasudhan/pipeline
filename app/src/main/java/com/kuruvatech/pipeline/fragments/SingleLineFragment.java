@@ -20,6 +20,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -35,10 +36,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Dash;
 import com.google.android.gms.maps.model.Dot;
 import com.google.android.gms.maps.model.Gap;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -50,6 +52,7 @@ import com.google.android.gms.maps.model.VisibleRegion;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.gson.Gson;
+import com.kuruvatech.pipeline.FullScreenViewActivity;
 import com.kuruvatech.pipeline.R;
 import com.kuruvatech.pipeline.model.Coordinate;
 import com.kuruvatech.pipeline.model.LineInfo;
@@ -58,7 +61,8 @@ import com.kuruvatech.pipeline.utils.Constants;
 import com.kuruvatech.pipeline.utils.GPSTracker;
 import com.kuruvatech.pipeline.utils.PermissionUtils;
 import com.kuruvatech.pipeline.utils.SessionManager;
-
+import com.kuruvatech.pipeline.model.GeoPoint;
+import com.kuruvatech.pipeline.SingleViewActivity;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -82,6 +86,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -94,7 +99,7 @@ import androidx.fragment.app.FragmentManager;
 
 public class SingleLineFragment extends Fragment implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMapClickListener, GoogleMap.OnCameraIdleListener,
+        GoogleMap.OnMapClickListener, GoogleMap.OnCameraIdleListener,GoogleMap.OnMarkerClickListener, GoogleMap.OnInfoWindowClickListener,
         AdapterView.OnItemSelectedListener{
 
     View rootview;
@@ -274,7 +279,8 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                 // Flip the values of the red, green and blue components of the polyline's color.
                 polyline.setColor(polyline.getColor() ^ 0x00ffffff);
                 polyline.getTag().toString();
-                Toast.makeText(getActivity(),  polyline.getTag().toString(), Toast.LENGTH_LONG).show();
+                alertMessage((location) polyline.getTag());
+                //Toast.makeText(getActivity(),  polyline.getTag().toString(), Toast.LENGTH_LONG).show();
                 // polyline.getId()
 
             }
@@ -285,6 +291,8 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         enableMyLocation();
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapClickListener(this);
+        mMap.setOnMarkerClickListener((GoogleMap.OnMarkerClickListener) this);
+        mMap.setOnInfoWindowClickListener(this);
      //   mMap.setOnCameraIdleListener(this);
 //        map.onCameraChange(new GoogleMap.OnCameraChangeListener() {
 //
@@ -298,7 +306,37 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         getPipelineWithinCoordinates();
 
     }
+    public void alertMessage(location obj) {
+        DialogInterface.OnClickListener dialogClickListeneryesno = new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
 
+                    case DialogInterface.BUTTON_NEUTRAL:
+                        break;
+                }
+            }
+        };
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        //  builder.setTitle("PipeLine");
+        // builder.setView()
+        final View loginFormView = getLayoutInflater().inflate(R.layout.lineinfo, null);
+        TextView name = loginFormView.findViewById(R.id.infoName);
+        TextView phone = loginFormView.findViewById(R.id.infoPhone);
+        TextView type = loginFormView.findViewById(R.id.infoType);
+        TextView purpose = loginFormView.findViewById(R.id.infoPurpose);
+        TextView size = loginFormView.findViewById(R.id.infoSize);
+        TextView datetv = loginFormView.findViewById(R.id.infoDate);
+        name.setText(obj.getName());
+        phone.setText(obj.getPhone());
+        type.setText(obj.getType());
+        purpose.setText(obj.getPurpose());
+        size.setText(obj.getSize());
+        datetv.setText(obj.getDate());
+        builder.setView(loginFormView);
+        builder.setNeutralButton("Ok", dialogClickListeneryesno).show();
+        //   .setIcon(R.drawable.ic_action_about).show();
+
+    }
     private void enableMyLocation() {
         //  Toast.makeText(getCon"enableMyLocation ", Toast.LENGTH_SHORT).show();
 
@@ -424,8 +462,35 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     public void getPipelineWithinCoordinates()
     {
         SessionManager mSession = new SessionManager(getContext());
-       String url = Constants.GET_PIPELINE_VENDOR + mSession.getEmail();
+        String url = Constants.GET_PIPELINE_URL_FINAL + mSession.getEmail();
+       // String url = Constants.GET_PIPELINE_URL_FINAL;
         new PostJSONAsyncTask().execute(url);
+    }
+
+//    @Override
+//    public boolean onMarkerClick(Marker marker) {
+//        Toast.makeText(getContext(), "onMarkerClick", Toast.LENGTH_LONG).show();
+//        Intent i = new Intent(getActivity(), FullScreenViewActivity.class);
+//        i.putExtra("position", 0);
+//        ArrayList<String> imageList = new ArrayList<String>();
+//        imageList.add("https://chunavane.s3.ap-south-1.amazonaws.com/bsy/image/main1513709806497.jpg");
+//        imageList.add("https://chunavane.s3.ap-south-1.amazonaws.com/bsy/image/main1513709891180.jpg");
+//        imageList.add("https://chunavane.s3.ap-south-1.amazonaws.com/bsy/image/main1513710152785.jpg");
+//        i.putExtra("imageurls",imageList);
+//        startActivity(i);
+//        return false;
+//    }
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Intent i = new Intent(getContext(), SingleViewActivity.class);
+        i.putExtra("url", "https://chunavane.s3.ap-south-1.amazonaws.com/bsy/image/main1513709806497.jpg");
+        startActivity(i);
+
     }
 
     public  class PostJSONAsyncTask extends AsyncTask<String, Void, Boolean> {
@@ -466,7 +531,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                     try {
                         lineInfoList = new ArrayList<location>();
                         JSONArray jsonArray = new JSONArray(responseOrder);
-                        for(int i = 0; i < jsonArray.length(); i++)
+                        for(int i = 0; i < (jsonArray.length() ); i++)
                         {
                             location lineInfo = null;
                             try {
@@ -481,7 +546,14 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                                 JSONArray obj4 = obj3.getJSONArray(j);
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
+                                                Double objele = obj4.getDouble(2);
+                                                Double objres = obj4.getDouble(3);
+//                                        1        if(obj4.length() > 2)
+//                                                {
+//                                                    Double objlong = obj4.getDouble(2);
+//                                                }2
                                                 lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
+                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,objres));
                                             }
                                         }
                                     }
@@ -553,15 +625,28 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                 .width(mLinewidth)
                                 .clickable(true);
                         for (int j = 0; j < points; j++) {
-                            double lat = loc.getCoordinates().get(j).latitude;
-                            double lon = loc.getCoordinates().get(j).longitude;
+                            double lat = loc.getElevation().get(j).getLatlng().latitude;
+                            double lon = loc.getElevation().get(j).getLatlng().longitude;
                             LatLng latLng = new LatLng(lat, lon);
                             mPolylineOptions = mPolylineOptions.add(latLng);
+                            if ((j % 20 == 0) || j == 0 || j == (points -1))
+                            {
+                                double elevation = loc.getElevation().get(j).getElevation();
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(latLng)
+                                        .title(getString(R.string.elevation))
+                                        .snippet(String.valueOf(elevation))
+                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_marker)));
+                            }
                         }
                         mMutablePolyline = mMap.addPolyline(mPolylineOptions);
-                        String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) ";
-                        mMutablePolyline.setTag(tag);
-                        int a = 100;
+                      //  String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) ";
+                        mMutablePolyline.setTag(lineInfoList.get(i));
+                        
+                    }
+                    if(lineInfoList.size() ==0)
+                    {
+                        Toast.makeText(getContext(), "No Pipeline Associated with This PhoneNumber", Toast.LENGTH_LONG).show();
                     }
 
                 } catch (Exception e) {

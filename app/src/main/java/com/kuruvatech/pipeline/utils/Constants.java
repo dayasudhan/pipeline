@@ -12,9 +12,12 @@ public class Constants {
     public static final String USERNAME = "PipelineMap";
     public static final String PARTY = "PipelineMap";
     public static final String GET_PIPELINE_URL = MAIN_URL + "/v1/plinemap/all";
+    public static final String GET_PIPELINE_URL_FINAL = MAIN_URL + "/v1/plinemap/phonelive/yes/";
+    public static final String GET_PIPELINE_URL_FINAL_ALL = MAIN_URL + "/v1/plinemap/phoneliveall/yes";
     public static final String POST_PIPELINE_URL = MAIN_URL + "/v1/pline/b";
     public static final String GET_PIPELINE_NEARBY_URL = MAIN_URL + "/v1/plinemap/nearby";
     public static final String GET_PIPELINE_WITHIN_URL = MAIN_URL + "/v1/plinemap/geowithin";
+    public static final String GET_PIPELINE_WITHIN_URL_FINAL_ALL = MAIN_URL + "/v1/plinemap/phoneliveall/geowithin/yes";
     public static final String GET_PIPELINE_VENDOR = MAIN_URL + "/v1/plinemap/";
     public static final String POST_LETTER_URL = MAIN_URL + "/v1/candidate/suggestion/" +USERNAME;
     public static final String LOGIN_URL = MAIN_URL + "/v1/m/login/";
@@ -22,9 +25,8 @@ public class Constants {
     public static final String FIREBASE_APP = "https://project-8598805513533999178.firebaseio.com";
     //To store the firebase id in shared preferences
     public static final String UNIQUE_ID = "uniqueid";
-    public static final String INVITE_TEXT = "Invite Your Friends to this app" +
-
-            "Download this android App: https://play.google.com/store/apps/details?id=com.kuruvatech.PipelineMap";
+    public static final String INVITE_TEXT = "Invite Your Friends to this Pipeline app " +
+            "Download @: https://play.google.com/store/apps/details?id=com.kuruvatech.Pipeline";
     public static final String INVITE_SUBJECT = "Your App";
 
 
@@ -42,7 +44,7 @@ public class Constants {
     public static final int TITLE_TEXT_COLOR_BLUE = 106;
 
 
-    // Activity request codes
+    // Activity request codes 
     public static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
     public static final int CAMERA_CAPTURE_VIDEO_REQUEST_CODE = 200;
 
