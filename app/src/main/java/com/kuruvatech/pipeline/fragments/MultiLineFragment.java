@@ -324,6 +324,12 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 //        map.setLatLngBoundsForCameraTarget();
 
         enableMyLocation();
+//        if (mGoogleApiClient == null) {
+//            buildGoogleApiClient();
+//        }
+//        mMap.setMyLocationEnabled(true);
+//        // mMap.setMyLocationButtonEnabled (true);
+//        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraIdleListener(this);
@@ -339,6 +345,15 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         LatLngBounds latLngBounds = visibleRegion.latLngBounds;
         getPipelineWithinCoordinates(latLngBounds);
 
+    }
+    public void initLocationbutton()
+    {
+        if (mGoogleApiClient == null) {
+            buildGoogleApiClient();
+        }
+        mMap.setMyLocationEnabled(true);
+        // mMap.setMyLocationButtonEnabled (true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
     }
     public boolean checkLocationPermission(){
         if (ContextCompat.checkSelfPermission(getActivity(),

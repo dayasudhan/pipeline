@@ -1,9 +1,12 @@
 package com.kuruvatech.pipeline;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -24,6 +27,7 @@ import com.kuruvatech.pipeline.fragments.SingleLineFragment;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -34,6 +38,7 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.ViewPager;
 
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Menu;
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
     ViewPagerAdapter adapter;
     Toolbar tb;
     SessionManager session;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private ProgressDialog mProgressDialog;
     public boolean isOnline(Context context) {
         ConnectivityManager conMgr = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -112,15 +118,101 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
 
                 }
             }
-
+            checkLocationPermission();
             setNavigationDrawer();
             setToolBar();
             isMainFragmentOpen = true;
             isdrawerbackpressed = false;
         }
     }
+    public boolean checkLocationPermission(){
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (shouldShowRequestPermissionRationale( Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                            .setTitle("Permission Required")
+                            .setMessage("This permission was denied earlier by you. This permission is required to get your location. So, in order to use this feature please allow this permission by clicking ok.")
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    ActivityCompat.requestPermissions(MainActivity.this,
+                                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                            LOCATION_PERMISSION_REQUEST_CODE);
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            })
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .show();
+                } else {
+                    // No explanation needed, we can request the permission.
+    //                ActivityCompat.requestPermissions(getActivity(),
+    //                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+    //                        LOCATION_PERMISSION_REQUEST_CODE);
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            LOCATION_PERMISSION_REQUEST_CODE);
+                }
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMISSION_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    if (ContextCompat.checkSelfPermission(this,
+                            Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        int off = 0;
+                        try {
+                            off = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
+                        } catch (Settings.SettingNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        if(off==0){
+                            Intent onGPS = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(onGPS);
+                        }
+                        MultiLineFragment fra1 = (MultiLineFragment)adapter.getItem(0);
+                        SingleLineFragment fra2 = (SingleLineFragment)adapter.getItem(1);
+                        fra1.initLocationbutton();
+                        fra2.initLocationbutton();
+//                        if (mGoogleApiClient == null) {
+//                            buildGoogleApiClient();
+//                        }
+//                        mMap.setMyLocationEnabled(true);
+//                        // mMap.setMyLocationButtonEnabled (true);
+//                        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+                    }
+
+                } else {
+
+                    //Toast.makeText(getActivity(), "Permission11111 Denied", Toast.LENGTH_LONG).show();
+                }
+                return;
+            }
+        }
+    }
     private void setupViewPager(ViewPager viewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+         adapter = new ViewPagerAdapter(getSupportFragmentManager());
      //   adapter.addFragment(new MainFragment(), getString(R.string.home));
         adapter.addFragment(new MultiLineFragment(), getString(R.string.map));
         adapter.addFragment(new SingleLineFragment(), getString(R.string.myline));

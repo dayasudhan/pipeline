@@ -545,7 +545,15 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
             }
         }
     }
-
+    public void initLocationbutton()
+    {
+        if (mGoogleApiClient == null) {
+            buildGoogleApiClient();
+        }
+        mMap.setMyLocationEnabled(true);
+        // mMap.setMyLocationButtonEnabled (true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+    }
     @Override
     public void onCameraIdle() {
         VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
