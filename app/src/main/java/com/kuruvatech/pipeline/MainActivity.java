@@ -15,6 +15,7 @@ import android.os.Bundle;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.tabs.TabLayout;
 import com.kuruvatech.pipeline.fragments.LogoutFragment;
+//import com.kuruvatech.pipeline.fragments.MainFragment;
 import com.kuruvatech.pipeline.fragments.MultiLineFragment;
 import com.kuruvatech.pipeline.fragments.Settingfragment;
 import com.kuruvatech.pipeline.fragments.ShareAppFragment;
@@ -79,51 +80,48 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
         super.onCreate(savedInstanceState);
         Mint.initAndStartSession(this.getApplication(), "4c38f221");
         session = new SessionManager(getApplicationContext());
-        session.checkLogin();
-//        {
-//            startService(new Intent(this, NotificationListener.class));
-//        }
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        if(session.checkLogin()) {
 
-        viewPager = (ViewPager) findViewById(R.id.viewpager);
-        setupViewPager(viewPager);
+
+            setContentView(R.layout.activity_main);
+            Toolbar toolbar = findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+            viewPager = (ViewPager) findViewById(R.id.viewpager);
+            setupViewPager(viewPager);
 //
-        tabLayout = (TabLayout) findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
-        tabLayout.addOnTabSelectedListener(this);
-        if (!isOnline(MainActivity.this))
-        {
-            try {
-                AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            tabLayout = (TabLayout) findViewById(R.id.tabs);
+            tabLayout.setupWithViewPager(viewPager);
+            tabLayout.addOnTabSelectedListener(this);
+            if (!isOnline(MainActivity.this)) {
+                try {
+                    AlertDialog alertDialog = new AlertDialog.Builder(this).create();
 
-                alertDialog.setTitle("Info");
-                alertDialog.setMessage(getString(R.string.internet_not_available));
-                alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
-                alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        //    finish();
+                    alertDialog.setTitle("Info");
+                    alertDialog.setMessage(getString(R.string.internet_not_available));
+                    alertDialog.setIcon(android.R.drawable.ic_dialog_alert);
+                    alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            //    finish();
 
-                    }
-                });
+                        }
+                    });
 
-                alertDialog.show();
+                    alertDialog.show();
+                } catch (Exception e) {
+
+                }
             }
-            catch(Exception e)
-            {
 
-            }
+            setNavigationDrawer();
+            setToolBar();
+            isMainFragmentOpen = true;
+            isdrawerbackpressed = false;
         }
-
-        setNavigationDrawer();
-        setToolBar();
-        isMainFragmentOpen = true;
-        isdrawerbackpressed = false;
     }
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-      //  adapter.addFragment(new MainFragment(), getString(R.string.home));
+     //   adapter.addFragment(new MainFragment(), getString(R.string.home));
         adapter.addFragment(new MultiLineFragment(), getString(R.string.map));
         adapter.addFragment(new SingleLineFragment(), getString(R.string.myline));
         adapter.addFragment(new ShareAppFragment(), getString(R.string.share));
@@ -186,16 +184,12 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                 Fragment frag = null;
 
                 int itemId = menuItem.getItemId();
-//                if (itemId == R.id.main) {
-//                    viewPager.setCurrentItem(0);
-//                    isMainFragmentOpen =  true;
-//                }
-//                else
-                if (itemId == R.id.myline) {
+
+                if (itemId == R.id.multiline) {
                     viewPager.setCurrentItem(0);
-                    isMainFragmentOpen =  false;
+                    isMainFragmentOpen =  true;
                 }
-                else if (itemId == R.id.multiline) {
+                else if (itemId == R.id.myline) {
                     viewPager.setCurrentItem(1);
                     isMainFragmentOpen =  false;
                 }
@@ -213,6 +207,10 @@ public class MainActivity extends AppCompatActivity implements TabLayout.OnTabSe
                     viewPager.setCurrentItem(4);
                     isMainFragmentOpen =  false;
                 }
+//                else if (itemId == R.id.main) {
+//                    viewPager.setCurrentItem(5);
+//                    isMainFragmentOpen =  true;
+//                }
                 dLayout.closeDrawers();
                 return true;
             }

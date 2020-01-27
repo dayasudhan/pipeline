@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -88,9 +89,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import static androidx.core.content.ContextCompat.checkSelfPermission;
 
 
 /**
@@ -222,22 +226,64 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
 
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(getContext(), "MyLocation button clicked", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getContext(), "MyLocation button clicked", Toast.LENGTH_SHORT).show();
         getCurrentLocation();
         return false;
     }
+    public boolean checkLocationPermission(){
+        if (ContextCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
 
+            // Should we show an explanation?
+            if (shouldShowRequestPermissionRationale( Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Permission Required")
+                        .setMessage("This permission was denied earlier by you. This permission is required to get your location. So, in order to use this feature please allow this permission by clicking ok.")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                ActivityCompat.requestPermissions(getActivity(),
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        LOCATION_PERMISSION_REQUEST_CODE);
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+            } else {
+                // No explanation needed, we can request the permission.
+//                ActivityCompat.requestPermissions(getActivity(),
+//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                        LOCATION_PERMISSION_REQUEST_CODE);
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            }
+            return false;
+        } else {
+            return true;
+        }
+    }
     //and then register for location
     @Override
     public void onMapReady(GoogleMap map) {
-
-        mIsStartPipeLine =false;
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
-            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LREQUEST_CODE_ASK_PERMISSIONS,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkLocationPermission();
         }
+        mIsStartPipeLine =false;
+//        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+//                != PackageManager.PERMISSION_GRANTED) {
+//            // Permission to access the location is missing.
+////            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LREQUEST_CODE_ASK_PERMISSIONS,
+////                    Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
+//            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+//                    LOCATION_PERMISSION_REQUEST_CODE);
+//        }
 
         //  savetofile();
         mMap =  map;
@@ -340,11 +386,13 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     private void enableMyLocation() {
         //  Toast.makeText(getCon"enableMyLocation ", Toast.LENGTH_SHORT).show();
 
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
-            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LOCATION_PERMISSION_REQUEST_CODE,
-                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+//            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LOCATION_PERMISSION_REQUEST_CODE,
+//                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
             buildGoogleApiClient();
 
             //  Toast.makeText(getContext(), "enableMyLocation startLocationUpdates ", Toast.LENGTH_SHORT).show();
@@ -353,6 +401,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
             // Access to the location has been granted to the app.
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
         }
     }
 
@@ -377,10 +426,12 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     public void getCurrentLocation()
     {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(getActivity(),
+            if (checkSelfPermission(getActivity(),
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                mMap.setMyLocationEnabled(true);
+
 
             }
         }
@@ -421,37 +472,80 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     public void onMapClick(LatLng latLng) {
 
     }
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case LREQUEST_CODE_ASK_PERMISSIONS:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission Granted
-                    Toast.makeText(getActivity(), "Permission Granted 10", Toast.LENGTH_SHORT)
-                            .show();
-                } else {
-                    // Permission Denied
-                    Toast.makeText(getActivity(), "Permission Denied 11", Toast.LENGTH_SHORT)
-                            .show();
-                }
-                break;
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+//        switch (requestCode) {
+//            case LREQUEST_CODE_ASK_PERMISSIONS:
+//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    // Permission Granted
+//                    Toast.makeText(getActivity(), "Permission Granted 10", Toast.LENGTH_SHORT)
+//                            .show();
+//                } else {
+//                    // Permission Denied
+//                    Toast.makeText(getActivity(), "Permission Denied 11", Toast.LENGTH_SHORT)
+//                            .show();
+//                }
+//                break;
+//
+//            case LOCATION_PERMISSION_REQUEST_CODE:
+//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    // Permission Granted
+//                    Toast.makeText(getActivity(), "Permission Granted 20", Toast.LENGTH_SHORT)
+//                            .show();
+//                    // mMap.setMyLocationEnabled(true);
+//                } else {
+//                    // Permission Denied
+//                    Toast.makeText(getActivity(), "Permission Denied 21", Toast.LENGTH_SHORT)
+//                            .show();
+//                }
+//                break;
+//            default:
+//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        }
+//    }
 
-            case LOCATION_PERMISSION_REQUEST_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission Granted
-                    Toast.makeText(getActivity(), "Permission Granted 20", Toast.LENGTH_SHORT)
-                            .show();
-                    // mMap.setMyLocationEnabled(true);
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_PERMISSION_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                    if (checkSelfPermission(getActivity(),
+                            Manifest.permission.ACCESS_FINE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        int off = 0;
+                        try {
+                            off = Settings.Secure.getInt(getActivity().getContentResolver(), Settings.Secure.LOCATION_MODE);
+                        } catch (Settings.SettingNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                        if(off==0){
+                            Intent onGPS = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(onGPS);
+                        }
+                        if (mGoogleApiClient == null) {
+                            buildGoogleApiClient();
+                        }
+                        mMap.setMyLocationEnabled(true);
+                        // mMap.setMyLocationButtonEnabled (true);
+                        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+
+                    }
+
                 } else {
-                    // Permission Denied
-                    Toast.makeText(getActivity(), "Permission Denied 21", Toast.LENGTH_SHORT)
-                            .show();
+
+                    //Toast.makeText(getActivity(), "permission354 denied", Toast.LENGTH_LONG).show();
                 }
-                break;
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                return;
+            }
         }
     }
+
     @Override
     public void onCameraIdle() {
         VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
