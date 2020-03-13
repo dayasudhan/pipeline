@@ -91,6 +91,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import static androidx.core.content.ContextCompat.checkSelfPermission;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -109,7 +111,7 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
      *
      * @see #onRequestPermissionsResult(int, String[], int[])
      */
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
     private static final int LREQUEST_CODE_ASK_PERMISSIONS = 123;
     // City locations for mutable polyline.
 
@@ -260,18 +262,8 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     //and then register for location
     @Override
     public void onMapReady(GoogleMap map) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            checkLocationPermission();
-        }
-        mIsStartPipeLine =false;
-//        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            // Permission to access the location is missing.
-//            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LREQUEST_CODE_ASK_PERMISSIONS,
-//                    Manifest.permission.WRITE_EXTERNAL_STORAGE, true);
-//        }
 
-        //  savetofile();
+        mIsStartPipeLine =false;
         mMap =  map;
         mLocationcallback = new LocationCallback() {
 
@@ -287,24 +279,20 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
         mMap.setContentDescription(getString(R.string.polyline_demo_description));
 
 
-//        int color = Color.HSVToColor(
-//                mAlphaBar.getProgress(), new float[]{mHueBar.getProgress(), 1, 1});
+
         mPolylineOptions = new PolylineOptions()
                 .color(Color.RED)
                 .width(mLinewidth)
                 .clickable(true);
-        // .add(KURUVA, KURUVA2, KURUVA3, KURUVA4);
+
 
 
         mMutablePolyline = map.addPolyline(mPolylineOptions);
         mMutablePolyline.setWidth(mLinewidth);
         mMutablePolyline.setPattern(PATTERN_MIXED);
-       // mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        // Move the map so that it is centered on the mutable polyline.
-        // map.moveCamera(CameraUpdateFactory.newLatLngZoom(MELBOURNE, 5));
+
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(KURUVA, 10));
-        // map.setMyLocationEnabled(true);
-        // Add a listener for polyline clicks that changes the clicked polyline's color.
+
 
         mMap.setOnPolylineClickListener(new GoogleMap.OnPolylineClickListener() {
             @Override
@@ -318,29 +306,12 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
 
             }
         });
-       // mMap.setOnMarkerDragListener();
-     //   mMap.
-        //openlinesfromfirestorage();
-//        map.setLatLngBoundsForCameraTarget();
 
-        enableMyLocation();
-//        if (mGoogleApiClient == null) {
-//            buildGoogleApiClient();
-//        }
-//        mMap.setMyLocationEnabled(true);
-//        // mMap.setMyLocationButtonEnabled (true);
-//        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        //enableMyLocation();
+        initLocationbutton();
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapClickListener(this);
         mMap.setOnCameraIdleListener(this);
-
-//        map.onCameraChange(new GoogleMap.OnCameraChangeListener() {
-//
-//            @Override
-//            public void onCameraChange(CameraPosition arg0) {
-//                moveMapCameraToBoundsAndInitClusterkraf();
-//            }
-//        });
         VisibleRegion visibleRegion = mMap.getProjection().getVisibleRegion();
         LatLngBounds latLngBounds = visibleRegion.latLngBounds;
         getPipelineWithinCoordinates(latLngBounds);
@@ -348,142 +319,16 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
     }
     public void initLocationbutton()
     {
-        if (mGoogleApiClient == null) {
-            buildGoogleApiClient();
+        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
+            // getActivity().checkLocationPermission();
+            return;
         }
-        mMap.setMyLocationEnabled(true);
-        // mMap.setMyLocationButtonEnabled (true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-    }
-    public boolean checkLocationPermission(){
-        if (ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (shouldShowRequestPermissionRationale( Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("Permission Required")
-                        .setMessage("This permission was denied earlier by you. This permission is required to get your location. So, in order to use this feature please allow this permission by clicking ok.")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                ActivityCompat.requestPermissions(getActivity(),
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        LOCATION_PERMISSION_REQUEST_CODE);
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
-            } else {
-                // No explanation needed, we can request the permission.
-//                ActivityCompat.requestPermissions(getActivity(),
-//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-//                        LOCATION_PERMISSION_REQUEST_CODE);
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_PERMISSION_REQUEST_CODE);
+        else {
+            if (mGoogleApiClient == null) {
+                buildGoogleApiClient();
             }
-            return false;
-        } else {
-            return true;
-        }
-    }
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case LOCATION_PERMISSION_REQUEST_CODE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    if (ContextCompat.checkSelfPermission(getActivity(),
-                            Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
-                        int off = 0;
-                        try {
-                            off = Settings.Secure.getInt(getActivity().getContentResolver(), Settings.Secure.LOCATION_MODE);
-                        } catch (Settings.SettingNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        if(off==0){
-                            Intent onGPS = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(onGPS);
-                        }
-                        if (mGoogleApiClient == null) {
-                            buildGoogleApiClient();
-                        }
-                        mMap.setMyLocationEnabled(true);
-                       // mMap.setMyLocationButtonEnabled (true);
-                        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-
-                    }
-
-                } else {
-
-                    //Toast.makeText(getActivity(), "Permission11111 Denied", Toast.LENGTH_LONG).show();
-                }
-                return;
-            }
-        }
-    }
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-//        switch (requestCode) {
-//            case LREQUEST_CODE_ASK_PERMISSIONS:
-//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    // Permission Granted
-//                    Toast.makeText(getActivity(), "Permission Granted 10", Toast.LENGTH_SHORT)
-//                            .show();
-//                } else {
-//                    // Permission Denied
-//                    Toast.makeText(getActivity(), "Permission Denied 11", Toast.LENGTH_SHORT)
-//                            .show();
-//                }
-//                break;
-//
-//            case LOCATION_PERMISSION_REQUEST_CODE:
-//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    // Permission Granted
-//                    Toast.makeText(getActivity(), "Permission Granted 20", Toast.LENGTH_SHORT)
-//                            .show();
-//                    // mMap.setMyLocationEnabled(true);
-//                } else {
-//                    // Permission Denied
-//                    Toast.makeText(getActivity(), "Permission Denied 21", Toast.LENGTH_SHORT)
-//                            .show();
-//                }
-//                break;
-//            default:
-//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        }
-//    }
-    private void enableMyLocation() {
-        //  Toast.makeText(getCon"enableMyLocation ", Toast.LENGTH_SHORT).show();
-
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-//            // Permission to access the location is missing.
-//            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LOCATION_PERMISSION_REQUEST_CODE,
-//                    Manifest.permission.ACCESS_FINE_LOCATION, true);
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-            buildGoogleApiClient();
-
-            //  Toast.makeText(getContext(), "enableMyLocation startLocationUpdates ", Toast.LENGTH_SHORT).show();
-
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
+
             mMap.getUiSettings().setMyLocationButtonEnabled(true);
         }
     }
@@ -622,9 +467,9 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                         JSONArray jsonArray = new JSONArray(responseOrder);
                         for(int i = 0; i < jsonArray.length(); i++)
                         {
-                            location lineInfo = null;
+                            location lineInfo = new location();
                             try {
-                                lineInfo = gson.fromJson(jsonArray.getString(i), location.class);
+                               // lineInfo = gson.fromJson(jsonArray.getString(i), location.class);
                                 JSONObject obj = jsonArray.getJSONObject(i);
                                 {
                                     if (obj.has("location")) {
@@ -636,13 +481,13 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
                                                 Double objele = obj4.getDouble(2);
-                                                Double objres = obj4.getDouble(3);
+
 //                                        1        if(obj4.length() > 2)
 //                                                {
 //                                                    Double objlong = obj4.getDouble(2);
 //                                                }2
                                                 lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
-                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,objres));
+                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,""));
                                             }
                                         }
                                     }
@@ -713,14 +558,20 @@ public class MultiLineFragment extends Fragment implements OnMapReadyCallback, G
                                     .color(Color.MAGENTA)
                                     .width(mLinewidth)
                                     .clickable(true);
+                            double baseelevation = 0;
                             for (int j = 0; j < points; j++) {
                                 double lat = loc.getCoordinates().get(j).latitude;
                                 double lon = loc.getCoordinates().get(j).longitude;
                                 LatLng latLng = new LatLng(lat, lon);
                                 mPolylineOptions = mPolylineOptions.add(latLng);
+
+                                if(j == 0)
+                                {
+                                    baseelevation = loc.getElevation().get(j).getElevation();
+                                }
                                 if ((j % 20 == 0) || j == 0 || j == (points -1))
                                 {
-                                    double elevation = loc.getElevation().get(j).getElevation();
+                                    double elevation =( loc.getElevation().get(j).getElevation() - baseelevation) ;
                                     mMap.addMarker(new MarkerOptions()
                                             .position(latLng)
                                             .title(getString(R.string.elevation))

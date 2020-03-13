@@ -26,7 +26,7 @@ public class Constants {
     //To store the firebase id in shared preferences
     public static final String UNIQUE_ID = "uniqueid";
     public static final String INVITE_TEXT = "Invite Your Friends to this Pipeline app " +
-            "Download @: https://play.google.com/store/apps/details?id=com.kuruvatech.Pipeline";
+            "Download @: https://play.google.com/store/apps/details?id=com.kuruvatech.pipeline";
     public static final String INVITE_SUBJECT = "Your App";
 
 

@@ -230,51 +230,11 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         getCurrentLocation();
         return false;
     }
-    public boolean checkLocationPermission(){
-        if (ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
-            if (shouldShowRequestPermissionRationale( Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-                new AlertDialog.Builder(getActivity())
-                        .setTitle("Permission Required")
-                        .setMessage("This permission was denied earlier by you. This permission is required to get your location. So, in order to use this feature please allow this permission by clicking ok.")
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                                ActivityCompat.requestPermissions(getActivity(),
-                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                        LOCATION_PERMISSION_REQUEST_CODE);
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
-            } else {
-                // No explanation needed, we can request the permission.
-//                ActivityCompat.requestPermissions(getActivity(),
-//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-//                        LOCATION_PERMISSION_REQUEST_CODE);
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_PERMISSION_REQUEST_CODE);
-            }
-            return false;
-        } else {
-            return true;
-        }
-    }
     //and then register for location
     @Override
     public void onMapReady(GoogleMap map) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            checkLocationPermission();
-        }
+
         mIsStartPipeLine =false;
 //        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
 //                != PackageManager.PERMISSION_GRANTED) {
@@ -334,7 +294,8 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         //openlinesfromfirestorage();
 //        map.setLatLngBoundsForCameraTarget();
 
-        enableMyLocation();
+        //enableMyLocation();
+        initLocationbutton();
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapClickListener(this);
         mMap.setOnMarkerClickListener((GoogleMap.OnMarkerClickListener) this);
@@ -383,27 +344,7 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
         //   .setIcon(R.drawable.ic_action_about).show();
 
     }
-    private void enableMyLocation() {
-        //  Toast.makeText(getCon"enableMyLocation ", Toast.LENGTH_SHORT).show();
 
-        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
-//            PermissionUtils.requestPermission((AppCompatActivity) getActivity(), LOCATION_PERMISSION_REQUEST_CODE,
-//                    Manifest.permission.ACCESS_FINE_LOCATION, true);
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-            buildGoogleApiClient();
-
-            //  Toast.makeText(getContext(), "enableMyLocation startLocationUpdates ", Toast.LENGTH_SHORT).show();
-
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            buildGoogleApiClient();
-            mMap.setMyLocationEnabled(true);
-            mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        }
-    }
 
 
     @Override
@@ -417,11 +358,6 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     }
 
 
-//    public void toggleClickability(View view) {
-//        if (mMutablePolyline != null) {
-//            mMutablePolyline.setClickable(((CheckBox) view).isChecked());
-//        }
-//    }
 
     public void getCurrentLocation()
     {
@@ -472,87 +408,21 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
     public void onMapClick(LatLng latLng) {
 
     }
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-//        switch (requestCode) {
-//            case LREQUEST_CODE_ASK_PERMISSIONS:
-//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    // Permission Granted
-//                    Toast.makeText(getActivity(), "Permission Granted 10", Toast.LENGTH_SHORT)
-//                            .show();
-//                } else {
-//                    // Permission Denied
-//                    Toast.makeText(getActivity(), "Permission Denied 11", Toast.LENGTH_SHORT)
-//                            .show();
-//                }
-//                break;
-//
-//            case LOCATION_PERMISSION_REQUEST_CODE:
-//                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                    // Permission Granted
-//                    Toast.makeText(getActivity(), "Permission Granted 20", Toast.LENGTH_SHORT)
-//                            .show();
-//                    // mMap.setMyLocationEnabled(true);
-//                } else {
-//                    // Permission Denied
-//                    Toast.makeText(getActivity(), "Permission Denied 21", Toast.LENGTH_SHORT)
-//                            .show();
-//                }
-//                break;
-//            default:
-//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        }
-//    }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case LOCATION_PERMISSION_REQUEST_CODE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
-                    if (checkSelfPermission(getActivity(),
-                            Manifest.permission.ACCESS_FINE_LOCATION)
-                            == PackageManager.PERMISSION_GRANTED) {
-                        int off = 0;
-                        try {
-                            off = Settings.Secure.getInt(getActivity().getContentResolver(), Settings.Secure.LOCATION_MODE);
-                        } catch (Settings.SettingNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        if(off==0){
-                            Intent onGPS = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                            startActivity(onGPS);
-                        }
-                        if (mGoogleApiClient == null) {
-                            buildGoogleApiClient();
-                        }
-                        mMap.setMyLocationEnabled(true);
-                        // mMap.setMyLocationButtonEnabled (true);
-                        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-
-                    }
-
-                } else {
-
-                    //Toast.makeText(getActivity(), "permission354 denied", Toast.LENGTH_LONG).show();
-                }
-                return;
-            }
-        }
-    }
     public void initLocationbutton()
     {
-        if (mGoogleApiClient == null) {
-            buildGoogleApiClient();
+        if (checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
+           // getActivity().checkLocationPermission();
+            return;
         }
-        mMap.setMyLocationEnabled(true);
-        // mMap.setMyLocationButtonEnabled (true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        else {
+            if (mGoogleApiClient == null) {
+                buildGoogleApiClient();
+            }
+            mMap.setMyLocationEnabled(true);
+            // mMap.setMyLocationButtonEnabled (true);
+            mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        }
     }
     @Override
     public void onCameraIdle() {
@@ -635,9 +505,9 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                         JSONArray jsonArray = new JSONArray(responseOrder);
                         for(int i = 0; i < (jsonArray.length() ); i++)
                         {
-                            location lineInfo = null;
+                            location lineInfo = new location();
                             try {
-                                lineInfo = gson.fromJson(jsonArray.getString(i), location.class);
+                               // lineInfo = gson.fromJson(jsonArray.getString(i), location.class);
                                 JSONObject obj = jsonArray.getJSONObject(i);
                                 {
                                     if (obj.has("location")) {
@@ -649,13 +519,32 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                                 Double objlat = obj4.getDouble(0);
                                                 Double objlong = obj4.getDouble(1);
                                                 Double objele = obj4.getDouble(2);
-                                                Double objres = obj4.getDouble(3);
+
 //                                        1        if(obj4.length() > 2)
 //                                                {
 //                                                    Double objlong = obj4.getDouble(2);
 //                                                }2
                                                 lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
-                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,objres));
+                                                lineInfo.getElevation().add(new GeoPoint(new LatLng(objlat, objlong),objele,""));
+                                            }
+                                        }
+                                    }
+                                    if (obj.has("markers")) {
+                                        JSONObject obj2 = obj.getJSONObject("markers");
+                                        if (obj2.has("coordinates")){
+                                            JSONArray obj3 = obj2.getJSONArray("coordinates");
+                                            for (int j = 0; j < obj3.length(); j++) {
+                                                JSONArray obj4 = obj3.getJSONArray(j);
+                                                Double objlat = obj4.getDouble(0);
+                                                Double objlong = obj4.getDouble(1);
+                                                Double objele = obj4.getDouble(2);
+                                                String objres = obj4.getString(3);
+//                                        1        if(obj4.length() > 2)
+//                                                {
+//                                                    Double objlong = obj4.getDouble(2);
+//                                                }2
+                                              //  lineInfo.getCoordinates().add(new LatLng(objlat, objlong));
+                                                lineInfo.getMarkers().add(new GeoPoint(new LatLng(objlat, objlong),objele,objres));
                                             }
                                         }
                                     }
@@ -693,7 +582,6 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                             {
                                 e.printStackTrace();
                             }
-                            String str = lineInfo.getName();
                             lineInfoList.add(lineInfo);
                         }
                     } catch (JSONException e) {
@@ -726,20 +614,40 @@ public class SingleLineFragment extends Fragment implements OnMapReadyCallback, 
                                 .color(Color.MAGENTA)
                                 .width(mLinewidth)
                                 .clickable(true);
+                        double baseelevation = 0;
                         for (int j = 0; j < points; j++) {
                             double lat = loc.getElevation().get(j).getLatlng().latitude;
                             double lon = loc.getElevation().get(j).getLatlng().longitude;
                             LatLng latLng = new LatLng(lat, lon);
+
                             mPolylineOptions = mPolylineOptions.add(latLng);
+
+                            if(j == 0)
+                            {
+                                baseelevation = loc.getElevation().get(j).getElevation();
+                            }
+
                             if ((j % 20 == 0) || j == 0 || j == (points -1))
                             {
-                                double elevation = loc.getElevation().get(j).getElevation();
+                                double elevation =( loc.getElevation().get(j).getElevation() - baseelevation) ;
+
                                 mMap.addMarker(new MarkerOptions()
                                         .position(latLng)
                                         .title(getString(R.string.elevation))
                                         .snippet(String.valueOf(elevation))
                                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_marker)));
                             }
+                        }
+                        int markerlength  = loc.getMarkers().size();
+                        for (int k = 0; k < markerlength; k++) {
+                            double lat = loc.getMarkers().get(k).getLatlng().latitude;
+                            double lon = loc.getMarkers().get(k).getLatlng().longitude;
+                            String markername = loc.getMarkers().get(k).getName();
+                            LatLng latLng = new LatLng(lat, lon);
+                                mMap.addMarker(new MarkerOptions()
+                                        .position(latLng)
+                                        .title(markername)
+                                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_flag)));
                         }
                         mMutablePolyline = mMap.addPolyline(mPolylineOptions);
                       //  String tag = lineInfoList.get(i).getName() + " ( " + lineInfoList.get(i).getPhone() + " ) ";

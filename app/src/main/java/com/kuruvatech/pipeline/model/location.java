@@ -9,6 +9,7 @@ public class location {
         type = "";
         coordinates = new ArrayList<LatLng>();
         elevation = new ArrayList<GeoPoint>();
+        markers = new ArrayList<GeoPoint>();
         name = "";
         phone = "";
         paid = 0;
@@ -70,6 +71,16 @@ public class location {
     }
 
     ArrayList<GeoPoint> elevation ;
+
+    public ArrayList<GeoPoint> getMarkers() {
+        return markers;
+    }
+
+    public void setMarkers(ArrayList<GeoPoint> markers) {
+        this.markers = markers;
+    }
+
+    ArrayList<GeoPoint> markers ;
     String name;
     String phone;
     String size;

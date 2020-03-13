@@ -20,21 +20,24 @@ public class GeoPoint {
         this.elevation = elevation;
     }
 
-    public double getResolution() {
-        return resolution;
-    }
 
-    public void setResolution(double resolution) {
-        this.resolution = resolution;
+
+
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 
     double elevation;
-    double resolution;
 
-    public GeoPoint(LatLng ll, double ele, double res) {
+    String name;
+    public GeoPoint(LatLng ll, double ele, String n) {
         latlng = ll;
         elevation = ele;
-        resolution = res;
+
+        name =  n;
     }
 
 }
